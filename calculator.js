@@ -3,6 +3,14 @@
    Expert-level rules-based recommendation
    ========================================= */
 
+// --- THEME INIT (runs before paint) -------
+(function () {
+  const stored = localStorage.getItem('rs-theme');
+  if (stored === 'dark' || stored === 'light') {
+    document.documentElement.setAttribute('data-theme', stored);
+  }
+})();
+
 const state = {
   current: 1,
   data: {
@@ -279,13 +287,21 @@ async function fetchGeminiMarkdown(d) {
 
 function renderMarkdownResult(markdownText) {
   const res = document.getElementById('step-result');
-  const html = typeof marked !== 'undefined'
+  const rawHtml = typeof marked !== 'undefined'
     ? marked.parse(markdownText)
     : markdownText.replace(/\n/g, '<br>');
+  const safeHtml = typeof DOMPurify !== 'undefined'
+    ? DOMPurify.sanitize(rawHtml, {
+        ALLOWED_TAGS: ['h1','h2','h3','h4','p','br','strong','em','b','i',
+                       'ul','ol','li','table','thead','tbody','tr','th','td',
+                       'blockquote','code','pre','hr'],
+        ALLOWED_ATTR: []
+      })
+    : rawHtml;
 
   res.innerHTML = `
 <div class="result-wrap">
-  <div class="result-markdown">${html}</div>
+  <div class="result-markdown">${safeHtml}</div>
   <div class="result-footer" style="margin-top:10px">
     <p class="result-disclaimer">Diese Analyse wurde von einem KI-Modell erstellt und dient als Ausgangspunkt für eine fundierte Teamdiskussion — keine Direktive. Menschliches Urteilsvermögen, organisatorischer Kontext und direkter Input der betroffenen Mitarbeitenden sollten stets leiten, wie Stellen neu gestaltet werden.</p>
     <div class="result-actions">
@@ -927,6 +943,14 @@ function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// --- THEME TOGGLE -------------------------
+document.getElementById('themeToggle')?.addEventListener('click', () => {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('rs-theme', next);
+});
 function animateCount(el, target, suffix) {
   const dur = 1200; const start = performance.now();
   function step(now) {

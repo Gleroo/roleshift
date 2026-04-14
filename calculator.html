@@ -1,12 +1,49 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="dark">
+<html lang="de-DE" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rollenanalyse — RoleShift</title>
-  <meta name="description" content="Analysieren Sie jede Stelle in fünf Schritten und erhalten Sie eine strukturierte KI- und Mensch-Kollaborationsempfehlung." />
+
+  <!-- Security -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+  <!-- Primary Meta -->
+  <title>KI-Rollenanalyse in 5 Schritten — RoleShift</title>
+  <meta name="description" content="Analysieren Sie jede Stelle in fünf Schritten: Wo sollte KI unterstützen, wo bleibt der Mensch unverzichtbar? Kostenloser Rollenanalysator für Führungskräfte und HR-Teams." />
+  <meta name="robots" content="index, follow" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="theme-color" content="#06141B" />
+
+  <!-- Canonical & Hreflang -->
+  <link rel="canonical" href="https://DEINE-DOMAIN.de/calculator.html" />
+  <link rel="alternate" hreflang="de" href="https://DEINE-DOMAIN.de/calculator.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="de_DE" />
+  <meta property="og:site_name" content="RoleShift" />
+  <meta property="og:title" content="KI-Rollenanalyse in 5 Schritten — RoleShift" />
+  <meta property="og:description" content="Analysieren Sie jede Stelle in fünf Schritten und erhalten Sie eine strukturierte KI- und Mensch-Kollaborationsempfehlung. Kostenlos." />
+  <meta property="og:url" content="https://DEINE-DOMAIN.de/calculator.html" />
+  <meta property="og:image" content="https://DEINE-DOMAIN.de/og-image.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="KI-Rollenanalyse in 5 Schritten — RoleShift" />
+  <meta name="twitter:description" content="Analysieren Sie jede Stelle in fünf Schritten und erhalten Sie eine strukturierte KI- und Mensch-Kollaborationsempfehlung. Kostenlos." />
+  <meta name="twitter:image" content="https://DEINE-DOMAIN.de/og-image.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+  <!-- Fonts & Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="styles.css" as="style" />
+  <link rel="preload" href="calculator.css" as="style" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="calculator.css" />
@@ -32,6 +69,7 @@
 </header>
 
 <main class="calc-stage" id="calcStage">
+  <h1 class="sr-only">KI-Rollenanalyse: Wo passt künstliche Intelligenz in Ihre Stelle?</h1>
 
   <!-- ① STELLE -->
   <div class="calc-step" id="step-1">
@@ -337,17 +375,8 @@
 
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" crossorigin="anonymous"></script>
 <script src="calculator.js"></script>
-<script>
-  const html = document.documentElement;
-  const stored = localStorage.getItem('rs-theme');
-  if (stored) html.setAttribute('data-theme', stored);
-  document.getElementById('themeToggle')?.addEventListener('click', () => {
-    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', next);
-    localStorage.setItem('rs-theme', next);
-  });
-</script>
 </body>
 </html>

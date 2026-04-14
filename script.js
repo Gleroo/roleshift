@@ -5,7 +5,7 @@
 // --- THEME -------------------------------
 const html = document.documentElement;
 const stored = localStorage.getItem('rs-theme');
-if (stored) html.setAttribute('data-theme', stored);
+if (stored === 'dark' || stored === 'light') html.setAttribute('data-theme', stored);
 document.getElementById('themeToggle')?.addEventListener('click', () => {
   const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
   html.setAttribute('data-theme', next);
