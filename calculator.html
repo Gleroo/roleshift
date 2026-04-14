@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rollenanalyse — RoleShift</title>
+  <meta name="description" content="Analysieren Sie jede Stelle in fünf Schritten und erhalten Sie eine strukturierte KI- und Mensch-Kollaborationsempfehlung." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="calculator.css" />
+</head>
+<body class="calc-body">
+
+<header class="calc-header">
+  <div class="calc-header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-word">Role<span class="logo-word-grad">Shift</span></span>
+    </a>
+    <div class="calc-progress-wrap">
+      <div class="calc-progress-track">
+        <div class="calc-progress-fill" id="progressFill"></div>
+      </div>
+      <span class="calc-progress-label" id="progressLabel">Schritt 1 von 5</span>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Dark Mode umschalten">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="calc-stage" id="calcStage">
+
+  <!-- ① STELLE -->
+  <div class="calc-step" id="step-1">
+    <div class="calc-card">
+      <div class="calc-eyebrow">Schritt 1 von 5 — Stelle</div>
+      <h2 class="calc-q">Welche Stelle analysieren Sie?</h2>
+      <p class="calc-hint">Geben Sie die Stellenbezeichnung ein und beschreiben Sie, womit diese Person die meiste Zeit verbringt. Je konkreter Sie sind, desto gezielter die Empfehlung.</p>
+
+      <div class="calc-field-group">
+        <label class="calc-label" for="roleTitle">Stellenbezeichnung</label>
+        <input class="calc-input" id="roleTitle" type="text" placeholder="z.B. Customer Support Specialist" autocomplete="off" />
+        <div class="calc-examples">
+          <span class="calc-ex-label">Häufige Stellen</span>
+          <div class="calc-chips" id="roleChips">
+            <button class="calc-chip" data-val="HR Manager">HR Manager</button>
+            <button class="calc-chip" data-val="Customer Support Specialist">Support Specialist</button>
+            <button class="calc-chip" data-val="Operations Coordinator">Operations Coordinator</button>
+            <button class="calc-chip" data-val="Finance Analyst">Finance Analyst</button>
+            <button class="calc-chip" data-val="Recruiter">Recruiter</button>
+            <button class="calc-chip" data-val="Marketing Manager">Marketing Manager</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-field-group">
+        <label class="calc-label" for="roleTasks">Kernaktivitäten <span class="calc-optional">optional, aber hilfreich</span></label>
+        <textarea class="calc-textarea" id="roleTasks" rows="3" placeholder="Womit verbringt diese Person tatsächlich ihre Zeit? Aufgaben, Entscheidungen, Interaktionen, Ergebnisse…"></textarea>
+      </div>
+
+      <div class="calc-actions">
+        <div></div>
+        <button class="btn btn-primary btn-lg calc-next" data-next="2">
+          Weiter <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② ARBEITSSTRUKTUR -->
+  <div class="calc-step calc-step-hidden" id="step-2">
+    <div class="calc-card">
+      <div class="calc-eyebrow">Schritt 2 von 5 — Arbeitsstruktur</div>
+      <h2 class="calc-q">Wie sieht die Arbeit tatsächlich aus?</h2>
+      <p class="calc-hint">Denken Sie an eine typische Woche — keine Ausreißer. Bewerten Sie jede Dimension auf einer Skala von 1 (niedrig) bis 5 (hoch).</p>
+
+      <div class="scale-questions">
+        <div class="scale-q" data-key="repetitive">
+          <div class="sq-header">
+            <p class="sq-text">Wie repetitiv ist die tägliche Arbeit?</p>
+            <div class="sq-endpoints"><span>Sehr abwechslungsreich</span><span>Sehr routinemäßig</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+        <div class="scale-q" data-key="standardized">
+          <div class="sq-header">
+            <p class="sq-text">Wie standardisiert sind die Prozesse und Regeln?</p>
+            <div class="sq-endpoints"><span>Ad-hoc, kontextabhängig</span><span>Vollständig dokumentiert, regelbasiert</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+        <div class="scale-q" data-key="judgment">
+          <div class="sq-header">
+            <p class="sq-text">Wie viel menschliches Urteilsvermögen erfordert diese Stelle?</p>
+            <div class="sq-endpoints"><span>Überwiegend regelbasiert</span><span>Urteil ist die Kernaufgabe</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+        <div class="scale-q" data-key="customerFacing">
+          <div class="sq-header">
+            <p class="sq-text">Wie stark ist die Stelle kunden- oder beziehungsorientiert?</p>
+            <div class="sq-endpoints"><span>Intern / Back-Office</span><span>Direkter Kundenkontakt</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-actions">
+        <button class="btn btn-ghost calc-back" data-back="1">Zurück</button>
+        <button class="btn btn-primary btn-lg calc-next" data-next="3">
+          Weiter <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ RISIKO & VERANTWORTUNG -->
+  <div class="calc-step calc-step-hidden" id="step-3">
+    <div class="calc-card">
+      <div class="calc-eyebrow">Schritt 3 von 5 — Risiko &amp; Verantwortung</div>
+      <h2 class="calc-q">Was steht auf dem Spiel, wenn etwas schiefgeht?</h2>
+      <p class="calc-hint">Dies beeinflusst, wie viel menschliche Kontrolle im empfohlenen Modell vorgesehen ist. Bewerten Sie das realistische Risiko — nicht den theoretisch schlimmsten Fall.</p>
+
+      <div class="scale-questions">
+        <div class="scale-q" data-key="costOfMistakes">
+          <div class="sq-header">
+            <p class="sq-text">Wie kostspielig oder schwer rückgängig zu machen sind Fehler?</p>
+            <div class="sq-endpoints"><span>Leicht korrigierbar</span><span>Schwerwiegend, schwer rückgängig</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+        <div class="scale-q" data-key="sensitivity">
+          <div class="sq-header">
+            <p class="sq-text">Wie viel Compliance, Regulierung oder Datensensibilität ist involviert?</p>
+            <div class="sq-endpoints"><span>Keine</span><span>Hohe regulatorische Anforderungen</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+        <div class="scale-q" data-key="accountability">
+          <div class="sq-header">
+            <p class="sq-text">Wie stark wird eine namentlich genannte Person für Ergebnisse verantwortlich gemacht?</p>
+            <div class="sq-endpoints"><span>Geteilt oder unklar</span><span>Namentliche Person immer verantwortlich</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+        <div class="scale-q" data-key="reviewNeeded">
+          <div class="sq-header">
+            <p class="sq-text">Wie viel Freigabe benötigen Ergebnisse vor der Verwendung?</p>
+            <div class="sq-endpoints"><span>Direkt verwendet, keine Prüfung</span><span>Immer geprüft und freigegeben</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-actions">
+        <button class="btn btn-ghost calc-back" data-back="2">Zurück</button>
+        <button class="btn btn-primary btn-lg calc-next" data-next="4">
+          Weiter <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ TEAM & UMFELD -->
+  <div class="calc-step calc-step-hidden" id="step-4">
+    <div class="calc-card">
+      <div class="calc-eyebrow">Schritt 4 von 5 — Team &amp; Umfeld</div>
+      <h2 class="calc-q">Wie bereit ist dieses Team, KI einzuführen?</h2>
+      <p class="calc-hint">Beantworten Sie für das Team, das diese Stelle verantwortet — nicht das Unternehmen als Ganzes. Die Bereitschaft bestimmt, was jetzt umsetzbar ist und was erst Vorarbeit braucht.</p>
+
+      <div class="scale-questions">
+        <div class="scale-q" data-key="documentation">
+          <div class="sq-header">
+            <p class="sq-text">Wie gut sind die Workflows und Prozesse dokumentiert?</p>
+            <div class="sq-endpoints"><span>Hauptsächlich im Kopf der Mitarbeiter</span><span>Klar schriftlich festgehalten und befolgt</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+        <div class="scale-q" data-key="dataStructure">
+          <div class="sq-header">
+            <p class="sq-text">Wie strukturiert und konsistent sind die Daten, mit denen dieses Team arbeitet?</p>
+            <div class="sq-endpoints"><span>Unstrukturiert, inkonsistent</span><span>Sauber und gut organisiert</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+        <div class="scale-q" data-key="aiReadiness">
+          <div class="sq-header">
+            <p class="sq-text">Wie offen ist das Team für neue digitale Tools?</p>
+            <div class="sq-endpoints"><span>Skeptisch, veränderungsresistent</span><span>Enthusiastische Early Adopter</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+        <div class="scale-q" data-key="toolsAdopted">
+          <div class="sq-header">
+            <p class="sq-text">Wie viel KI oder Automatisierung wird hier bereits aktiv genutzt?</p>
+            <div class="sq-endpoints"><span>Überhaupt keine</span><span>Im täglichen Workflow integriert</span></div>
+          </div>
+          <div class="sq-scale">
+            <button class="sq-opt" data-val="1">1</button>
+            <button class="sq-opt" data-val="2">2</button>
+            <button class="sq-opt" data-val="3">3</button>
+            <button class="sq-opt" data-val="4">4</button>
+            <button class="sq-opt" data-val="5">5</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-actions">
+        <button class="btn btn-ghost calc-back" data-back="3">Zurück</button>
+        <button class="btn btn-primary btn-lg calc-next" data-next="5">
+          Weiter <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ PRIORITÄT -->
+  <div class="calc-step calc-step-hidden" id="step-5">
+    <div class="calc-card">
+      <div class="calc-eyebrow">Schritt 5 von 5 — Priorität</div>
+      <h2 class="calc-q">Was ist Ihrem Team gerade am wichtigsten?</h2>
+      <p class="calc-hint">Dieselbe Rollenanalyse kann je nach Optimierungsziel zu unterschiedlichen Empfehlungen führen. Wählen Sie alle Prioritäten aus, die zu Ihrer aktuellen Situation passen.</p>
+
+      <div class="calc-goal-grid" id="goalGrid">
+        <button class="calc-goal-card" data-val="time">
+          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l3 3"/></svg></div>
+          <div class="cgc-title">Zeit sparen</div>
+          <div class="cgc-desc">Zeit für Aufgaben reduzieren, die kein menschliches Urteilsvermögen erfordern</div>
+        </button>
+        <button class="calc-goal-card" data-val="admin">
+          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="7" y="2" width="6" height="4" rx="1"/></svg></div>
+          <div class="cgc-title">Verwaltung reduzieren</div>
+          <div class="cgc-desc">Repetitive Prozessschritte automatisieren, damit das Team sich auf höherwertige Arbeit konzentrieren kann</div>
+        </button>
+        <button class="calc-goal-card" data-val="quality">
+          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2l2.4 4.9L18 8l-4 3.9.9 5.5L10 15l-4.9 2.4.9-5.5L2 8l5.6-.1z"/></svg></div>
+          <div class="cgc-title">Qualität verbessern</div>
+          <div class="cgc-desc">KI nutzen, um Variation zu reduzieren und Konsistenz in Ergebnissen zu erhöhen</div>
+        </button>
+        <button class="calc-goal-card" data-val="compliance">
+          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 19s7-3.5 7-9V4l-7-2.5L3 4v6c0 5.5 7 9 7 9z"/></svg></div>
+          <div class="cgc-title">Vertrauen &amp; Compliance sichern</div>
+          <div class="cgc-desc">Menschen verantwortlich halten und KI nur dort einsetzen, wo sie prüfbar ist</div>
+        </button>
+        <button class="calc-goal-card" data-val="speed">
+          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2L3 12h7l-1 6 8-10h-7z"/></svg></div>
+          <div class="cgc-title">Durchlaufzeit verkürzen</div>
+          <div class="cgc-desc">Zykluszeiten komprimieren durch KI beim Entwerfen, Sortieren und Vorverarbeiten</div>
+        </button>
+        <button class="calc-goal-card" data-val="focus">
+          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="2.5"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3"/></svg></div>
+          <div class="cgc-title">Auf Kernaufgaben fokussieren</div>
+          <div class="cgc-desc">Stellenenergie auf Entscheidungen und Beziehungen lenken, die Menschen erfordern</div>
+        </button>
+      </div>
+
+      <div class="calc-actions">
+        <button class="btn btn-ghost calc-back" data-back="4">Zurück</button>
+        <button class="btn btn-primary btn-lg" id="generateBtn" disabled>
+          Analyse generieren <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERGEBNIS -->
+  <div class="calc-step calc-step-hidden" id="step-result"></div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="calculator.js"></script>
+<script>
+  const html = document.documentElement;
+  const stored = localStorage.getItem('rs-theme');
+  if (stored) html.setAttribute('data-theme', stored);
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('rs-theme', next);
+  });
+</script>
+</body>
+</html>

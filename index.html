@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoleShift — Die optimale Balance zwischen KI und menschlicher Arbeit</title>
+  <meta name="description" content="RoleShift hilft Führungskräften und HR-Teams zu verstehen, wo KI unterstützt, wo Menschen unverzichtbar sind und wie Stellen sich weiterentwickeln sollten. Kostenlose Rollenanalyse." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="header" id="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-word">Role<span class="logo-word-grad">Shift</span></span>
+    </a>
+    <nav class="nav">
+      <a href="#why">Warum es wichtig ist</a>
+      <a href="#how">So funktioniert es</a>
+      <a href="#preview">Optionen vergleichen</a>
+    </nav>
+    <div class="header-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Dark Mode umschalten">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="calculator.html" class="btn btn-primary">Rolle analysieren</a>
+    </div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Menü">
+      <span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#why">Warum es wichtig ist</a>
+    <a href="#how">So funktioniert es</a>
+    <a href="#preview">Optionen vergleichen</a>
+    <a href="calculator.html" class="btn btn-primary">Rolle analysieren</a>
+  </div>
+</header>
+
+<!-- ① HERO -->
+<section class="hero" id="hero">
+
+  <!-- Infinite grid background -->
+  <div class="hero-grid-bg" id="heroGridBg">
+    <div class="hero-grid-blobs">
+      <div class="hero-blob hero-blob-1"></div>
+      <div class="hero-blob hero-blob-2"></div>
+      <div class="hero-blob hero-blob-3"></div>
+    </div>
+    <svg class="hero-grid-canvas" id="heroGridBase" aria-hidden="true">
+      <defs>
+        <pattern id="heroGridPatternBase" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#heroGridPatternBase)"/>
+    </svg>
+    <svg class="hero-grid-reveal" id="heroGridReveal" aria-hidden="true">
+      <defs>
+        <pattern id="heroGridPatternReveal" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#heroGridPatternReveal)"/>
+    </svg>
+  </div>
+
+  <div class="container hero-layout">
+    <div class="hero-text reveal">
+      <p class="eyebrow">Mensch · KI Kollaboration</p>
+      <h1>Genau wissen,<br/>wo KI in Ihr<br/><em>Team passt.</em></h1>
+      <p class="hero-sub">Eine strukturierte Rollenanalyse, die jede Aufgabe dem richtigen Verantwortlichen zuordnet — KI, Mensch oder beide. Konkret. Umsetzbar. Für Teams, die Ergebnisse wollen, keine Frameworks.</p>
+      <div class="hero-ctas">
+        <a href="calculator.html" class="btn btn-primary btn-lg">
+          Rolle analysieren
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+        </a>
+        <a href="#how" class="btn btn-ghost btn-lg">So funktioniert es</a>
+      </div>
+      <p class="hero-trust">5 Minuten &nbsp;·&nbsp; Kein Konto nötig &nbsp;·&nbsp; Powered by Gemini AI</p>
+    </div>
+
+    <div class="hero-visual reveal reveal-delay-2" aria-hidden="true">
+      <div class="hv-card">
+        <div class="hv-card-top">
+          <div>
+            <div class="hv-card-label">Rollenanalyse</div>
+            <div class="hv-role-name">Customer Support Lead</div>
+          </div>
+          <div class="hv-model-pill">KI-Copilot Workflow</div>
+        </div>
+        <div class="hv-bars">
+          <div class="hv-bar-row">
+            <span>Automatisierbar</span>
+            <div class="hv-track"><div class="hv-fill hv-fill-auto" data-w="32"></div></div>
+            <span class="hv-pct pct-auto">32%</span>
+          </div>
+          <div class="hv-bar-row">
+            <span>KI-unterstützt</span>
+            <div class="hv-track"><div class="hv-fill hv-fill-ai" data-w="29"></div></div>
+            <span class="hv-pct pct-ai">29%</span>
+          </div>
+          <div class="hv-bar-row">
+            <span>Menschlich geleitet</span>
+            <div class="hv-track"><div class="hv-fill hv-fill-human" data-w="39"></div></div>
+            <span class="hv-pct pct-human">39%</span>
+          </div>
+        </div>
+        <div class="hv-divider"></div>
+        <div class="hv-summary">„Der Kundenkontakt und die Fehlerkosten dieser Stelle erfordern, dass KI-Beteiligung sichtbar und kontrolliert bleibt — unsichtbare Automatisierung würde das Vertrauen gefährden."</div>
+      </div>
+      <div class="hv-flow">
+        <div class="hv-node hv-node-done">Rolle beschreiben</div>
+        <div class="hv-line"></div>
+        <div class="hv-node hv-node-done">Aufgaben bewerten</div>
+        <div class="hv-line"></div>
+        <div class="hv-node hv-node-active">Modell erhalten</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scroll-hint reveal reveal-delay-3">
+    <span>Scrollen</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ② WARUM ES WICHTIG IST -->
+<section class="section-why" id="why">
+  <div class="container">
+    <div class="section-intro reveal">
+      <p class="eyebrow">Die Realität</p>
+      <h2>KI wird eingeführt.<br/>Stellen werden nicht neu gestaltet.</h2>
+    </div>
+    <div class="why-cards">
+      <div class="why-card reveal">
+        <div class="why-num">01</div>
+        <h3>Die meisten KI-Einführungen enttäuschen</h3>
+        <p>McKinsey zeigt: 8 von 10 Unternehmen, die KI einsetzen, erzielen weniger Wert als erwartet — nicht weil die Technologie versagt, sondern weil die Arbeit drumherum nie neu strukturiert wurde.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-1">
+        <div class="why-num">02</div>
+        <h3>Mensch + KI schlägt beide allein</h3>
+        <p>Forschungen von MIT und Harvard zeigen konsistent: Gemischte Mensch-KI-Teams übertreffen sowohl vollautomatisierte als auch rein menschliche Teams bei komplexen Wissensaufgaben um 20–40%. Die Kombination ist der entscheidende Vorteil.</p>
+      </div>
+      <div class="why-card reveal reveal-delay-2">
+        <div class="why-num">03</div>
+        <h3>„Hohes Risiko" sagt Ihnen nichts</h3>
+        <p>Ein Automatisierungsrisiko von 72% gibt einer Führungskraft keinerlei Handlungsanleitung. RoleShift geht auf Aufgabenebene — konkrete Entscheidungen, konkrete Verantwortliche, ein konkreter Plan.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ③ SO FUNKTIONIERT ES -->
+<section class="section-how" id="how">
+  <div class="container">
+    <div class="section-intro reveal">
+      <p class="eyebrow">So funktioniert es</p>
+      <h2>Vier Schritte.<br/>Eine präzise Empfehlung.</h2>
+    </div>
+
+    <div class="how-sticky-wrap">
+      <div class="how-steps-left">
+        <div class="how-step how-step--active" data-step="1">
+          <div class="hs-num">01</div>
+          <div class="hs-text">
+            <h3>Die Stelle beschreiben</h3>
+            <p>Geben Sie die Stellenbezeichnung und Kernaufgaben ein. Wählen Sie aus gängigen Beispielen oder beschreiben Sie die Stelle mit eigenen Worten.</p>
+          </div>
+        </div>
+        <div class="how-step" data-step="2">
+          <div class="hs-num">02</div>
+          <div class="hs-text">
+            <h3>Die Aufgabenstruktur bewerten</h3>
+            <p>Beantworten Sie Fragen zur Repetitivität, Standardisierung und Urteilsabhängigkeit der Arbeit. Dauert unter 2 Minuten.</p>
+          </div>
+        </div>
+        <div class="how-step" data-step="3">
+          <div class="hs-num">03</div>
+          <div class="hs-text">
+            <h3>Ihre Prioritäten setzen</h3>
+            <p>Wählen Sie, was Ihnen am wichtigsten ist — Zeit sparen, Verwaltung reduzieren, Qualität verbessern oder Menschen auf höherwertige Arbeit fokussieren.</p>
+          </div>
+        </div>
+        <div class="how-step" data-step="4">
+          <div class="hs-num">04</div>
+          <div class="hs-text">
+            <h3>Ihr personalisiertes Ergebnis erhalten</h3>
+            <p>Erhalten Sie ein maßgeschneidertes Kollaborationsmodell mit aufgabenspezifischer Orientierung, einer Arbeitsaufteilung und einem phasenweisen Umsetzungsplan — spezifisch für Ihre Stelle.</p>
+          </div>
+        </div>
+        <a href="calculator.html" class="btn btn-primary how-cta">Analyse starten</a>
+      </div>
+
+      <div class="how-visual-right">
+        <!-- Panel 1 -->
+        <div class="how-vis-panel" data-vis="1">
+          <div class="hvp-label">Schritt 1 von 4 — Stelle</div>
+          <div class="hvp-question">Welche Stelle analysieren Sie?</div>
+          <div class="hvp-field">
+            <span class="hvp-field-label">Stellenbezeichnung</span>
+            <div class="hvp-input-mock">Finance Analyst</div>
+          </div>
+          <div class="hvp-field">
+            <span class="hvp-field-label">Kernaktivitäten <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">optional</span></span>
+            <div class="hvp-textarea-mock">Varianzanalyse, Berichtserstellung, Prognosekommentare, Compliance-Prüfung…</div>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font-size:0.6rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);font-family:'Inter',sans-serif;margin-bottom:8px">Häufige Stellen</div>
+            <div class="hvp-chips">
+              <span class="hvp-chip hvp-chip--on">Finance Analyst</span>
+              <span class="hvp-chip">HR Manager</span>
+              <span class="hvp-chip">Recruiter</span>
+              <span class="hvp-chip">Support Specialist</span>
+            </div>
+          </div>
+        </div>
+        <!-- Panel 2 -->
+        <div class="how-vis-panel how-vis-hidden" data-vis="2">
+          <div class="hvp-label">Schritt 2 von 4 — Arbeitsstruktur</div>
+          <div class="hvp-question">Wie sieht die Arbeit tatsächlich aus?</div>
+          <div class="hvp-sq-block">
+            <div class="hvp-sq">
+              <p class="hvp-sq-text">Wie repetitiv ist die tägliche Arbeit?</p>
+              <div class="hvp-sq-endpoints"><span>Sehr abwechslungsreich</span><span>Sehr routinemäßig</span></div>
+              <div class="hvp-sq-scale">
+                <span class="hvp-sq-opt">1</span>
+                <span class="hvp-sq-opt">2</span>
+                <span class="hvp-sq-opt hvp-sq-sel">3</span>
+                <span class="hvp-sq-opt">4</span>
+                <span class="hvp-sq-opt">5</span>
+              </div>
+            </div>
+            <div class="hvp-sq">
+              <p class="hvp-sq-text">Wie standardisiert sind die Prozesse und Regeln?</p>
+              <div class="hvp-sq-endpoints"><span>Ad-hoc, kontextabhängig</span><span>Vollständig regelbasiert</span></div>
+              <div class="hvp-sq-scale">
+                <span class="hvp-sq-opt">1</span>
+                <span class="hvp-sq-opt">2</span>
+                <span class="hvp-sq-opt">3</span>
+                <span class="hvp-sq-opt hvp-sq-sel">4</span>
+                <span class="hvp-sq-opt">5</span>
+              </div>
+            </div>
+            <div class="hvp-sq">
+              <p class="hvp-sq-text">Wie viel menschliches Urteilsvermögen erfordert diese Stelle?</p>
+              <div class="hvp-sq-endpoints"><span>Überwiegend regelbasiert</span><span>Urteil ist die Kernaufgabe</span></div>
+              <div class="hvp-sq-scale">
+                <span class="hvp-sq-opt">1</span>
+                <span class="hvp-sq-opt">2</span>
+                <span class="hvp-sq-opt">3</span>
+                <span class="hvp-sq-opt hvp-sq-sel">4</span>
+                <span class="hvp-sq-opt">5</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Panel 3 -->
+        <div class="how-vis-panel how-vis-hidden" data-vis="3">
+          <div class="hvp-label">Schritt 3 von 4 — Prioritäten</div>
+          <div class="hvp-question">Was ist Ihrem Team gerade am wichtigsten?</div>
+          <div class="hvp-goal-grid">
+            <div class="hvp-goal-card hvp-goal-sel">
+              <div class="hvp-gc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l3 3"/></svg></div>
+              <div class="hvp-gc-title">Zeit sparen</div>
+              <div class="hvp-gc-desc">Aufgaben reduzieren, die kein menschliches Urteil erfordern</div>
+            </div>
+            <div class="hvp-goal-card">
+              <div class="hvp-gc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="7" y="2" width="6" height="4" rx="1"/></svg></div>
+              <div class="hvp-gc-title">Verwaltung reduzieren</div>
+              <div class="hvp-gc-desc">Repetitive Prozessschritte automatisieren</div>
+            </div>
+            <div class="hvp-goal-card hvp-goal-sel">
+              <div class="hvp-gc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2l2.4 4.9L18 8l-4 3.9.9 5.5L10 15l-4.9 2.4.9-5.5L2 8l5.6-.1z"/></svg></div>
+              <div class="hvp-gc-title">Qualität verbessern</div>
+              <div class="hvp-gc-desc">Variation reduzieren, Konsistenz erhöhen</div>
+            </div>
+            <div class="hvp-goal-card">
+              <div class="hvp-gc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2L3 12h7l-1 6 8-10h-7z"/></svg></div>
+              <div class="hvp-gc-title">Durchlaufzeit verkürzen</div>
+              <div class="hvp-gc-desc">KI-Entwürfe komprimieren Zykluszeiten</div>
+            </div>
+            <div class="hvp-goal-card">
+              <div class="hvp-gc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="2.5"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3"/></svg></div>
+              <div class="hvp-gc-title">Auf Kernaufgaben fokussieren</div>
+              <div class="hvp-gc-desc">Energie auf Arbeit lenken, die Menschen erfordert</div>
+            </div>
+            <div class="hvp-goal-card">
+              <div class="hvp-gc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 19s7-3.5 7-9V4l-7-2.5L3 4v6c0 5.5 7 9 7 9z"/></svg></div>
+              <div class="hvp-gc-title">Compliance sicherstellen</div>
+              <div class="hvp-gc-desc">Menschen verantwortlich und prüfbar halten</div>
+            </div>
+          </div>
+        </div>
+        <!-- Panel 4 — mirrors real calculator result -->
+        <div class="how-vis-panel how-vis-hidden" data-vis="4">
+          <div class="hvp-label">Schritt 4 von 4 — Personalisiertes Ergebnis</div>
+          <span class="result-model-badge" style="margin-bottom:14px">KI-Entwurf, menschliche Prüfung</span>
+          <div style="font-size:1.05rem;font-weight:700;letter-spacing:-0.02em;color:var(--text);margin-bottom:6px;line-height:1.2">KI generiert. Menschen verantworten das Ergebnis.</div>
+          <p style="font-size:0.75rem;color:var(--text-3);line-height:1.6;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">Compliance und Fehlerkosten prägen das Modell. KI entwirft — Menschen zeichnen ab.</p>
+          <div class="result-bars" style="margin-bottom:18px">
+            <div>
+              <div class="result-bar-meta"><span class="result-bar-label">Automatisierbar</span><span class="result-bar-pct pct-auto">29%</span></div>
+              <div class="result-track"><div class="result-fill fill-auto" style="width:29%;transition:none"></div></div>
+            </div>
+            <div>
+              <div class="result-bar-meta"><span class="result-bar-label">KI-unterstützt</span><span class="result-bar-pct pct-ai">35%</span></div>
+              <div class="result-track"><div class="result-fill fill-ai" style="width:35%;transition:none"></div></div>
+            </div>
+            <div>
+              <div class="result-bar-meta"><span class="result-bar-label">Menschlich geleitet</span><span class="result-bar-pct pct-human">24%</span></div>
+              <div class="result-track"><div class="result-fill fill-human" style="width:24%;transition:none"></div></div>
+            </div>
+            <div>
+              <div class="result-bar-meta"><span class="result-bar-label">Prüfung erforderlich</span><span class="result-bar-pct pct-review">12%</span></div>
+              <div class="result-track"><div class="result-fill fill-review" style="width:12%;transition:none"></div></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <div class="result-task-col-title col-title-ai" style="font-size:0.56rem;margin-bottom:10px;padding-bottom:8px">Mit KI starten</div>
+              <ul class="result-task-list">
+                <li>Berichtserstellung</li>
+                <li>Varianzkommentare</li>
+                <li>Datenabgleich</li>
+              </ul>
+            </div>
+            <div>
+              <div class="result-task-col-title col-title-human" style="font-size:0.56rem;margin-bottom:10px;padding-bottom:8px">Menschlich geleitet</div>
+              <ul class="result-task-list">
+                <li>Compliance-Abzeichnung</li>
+                <li>Vorstandspräsentationen</li>
+                <li>Risikoentscheidungen</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ④ VERGLEICHSTABELLE -->
+<section class="section-compare" id="preview">
+  <div class="container">
+    <div class="section-intro reveal">
+      <p class="eyebrow">Der direkte Vergleich</p>
+      <h2>RoleShift vs.<br/>die Alternativen.</h2>
+      <p class="section-sub">Die meisten Teams versuchen das intern zu lösen oder beauftragen teure Berater. Beides liefert nicht das, was Sie wirklich brauchen: einen konkreten, unvoreingenommenen Plan, den Sie heute umsetzen können.</p>
+    </div>
+
+    <div class="ct-wrap reveal">
+      <div class="ct-new">
+
+        <!-- Header row -->
+        <div class="ct-head-row">
+          <div class="ct-head-empty"><span class="ct-head-label">Funktionen</span></div>
+          <div class="ct-col-head">
+            <div class="ct-col-name">Intern</div>
+            <div class="ct-col-sub">Team macht es selbst</div>
+          </div>
+          <div class="ct-col-head is-rs">
+            <span class="ct-rs-badge">Empfohlen</span>
+            <div class="ct-col-name">RoleShift</div>
+            <div class="ct-col-sub">Strukturierte KI-Analyse</div>
+          </div>
+          <div class="ct-col-head">
+            <div class="ct-col-name">Beratung</div>
+            <div class="ct-col-sub">Externe Beratungsleistung</div>
+          </div>
+        </div>
+
+        <!-- Row 1 -->
+        <div class="ct-grid-row">
+          <div class="ct-feat-cell"><div class="ct-feat-name">Zeit bis zum ersten Ergebnis</div></div>
+          <div class="ct-cell"><span class="ct-val ct-bad">Wochen</span></div>
+          <div class="ct-cell is-rs"><span class="ct-val ct-good">5 Minuten</span></div>
+          <div class="ct-cell"><span class="ct-val ct-bad">Monate</span></div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="ct-grid-row">
+          <div class="ct-feat-cell"><div class="ct-feat-name">Kosten</div></div>
+          <div class="ct-cell"><span class="ct-val ct-mid">Hohe Opportunitätskosten</span></div>
+          <div class="ct-cell is-rs"><span class="ct-val ct-good">Kostenlos</span></div>
+          <div class="ct-cell"><span class="ct-val ct-bad">Sehr hoch</span></div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="ct-grid-row">
+          <div class="ct-feat-cell">
+            <div class="ct-feat-name">Aufgabenspezifische Orientierung</div>
+            <div class="ct-feat-sub">Konkrete Empfehlungen je Aufgabe, kein pauschaler Risikowert</div>
+          </div>
+          <div class="ct-cell"><span class="ct-icon ct-no"></span></div>
+          <div class="ct-cell is-rs"><span class="ct-icon ct-yes"></span></div>
+          <div class="ct-cell"><span class="ct-val ct-mid">Manchmal</span></div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="ct-grid-row">
+          <div class="ct-feat-cell">
+            <div class="ct-feat-name">Umsetzungsfahrplan</div>
+            <div class="ct-feat-sub">Phasenweiser Plan, um sofort auf die Analyse zu reagieren</div>
+          </div>
+          <div class="ct-cell"><span class="ct-icon ct-no"></span></div>
+          <div class="ct-cell is-rs"><span class="ct-icon ct-yes"></span></div>
+          <div class="ct-cell"><span class="ct-val ct-mid">Gegen Aufpreis</span></div>
+        </div>
+
+        <!-- Row 5 -->
+        <div class="ct-grid-row">
+          <div class="ct-feat-cell">
+            <div class="ct-feat-name">Datenschutz-first</div>
+            <div class="ct-feat-sub">Keine Datenspeicherung, kein Konto nötig — das Ergebnis gehört nur Ihnen</div>
+          </div>
+          <div class="ct-cell"><span class="ct-icon ct-no"></span></div>
+          <div class="ct-cell is-rs"><span class="ct-icon ct-yes"></span></div>
+          <div class="ct-cell"><span class="ct-val ct-bad">Daten geteilt</span></div>
+        </div>
+
+        <!-- Row 6 -->
+        <div class="ct-grid-row is-last">
+          <div class="ct-feat-cell">
+            <div class="ct-feat-name">Skaliert auf jede Stelle</div>
+            <div class="ct-feat-sub">Dieselbe rigorose Analyse für 1 oder 50 Stellen durchführen</div>
+          </div>
+          <div class="ct-cell"><span class="ct-val ct-bad">Langsam &amp; teuer</span></div>
+          <div class="ct-cell is-rs"><span class="ct-icon ct-yes"></span></div>
+          <div class="ct-cell"><span class="ct-val ct-bad">Prohibitiv teuer</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="preview-cta reveal">
+      <p>Diese Analysetiefe für jede Stelle in Ihrer Organisation — in 5 Minuten.</p>
+      <a href="calculator.html" class="btn btn-primary btn-lg">
+        Rolle analysieren
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ ABSCHLUSS-CTA -->
+<section class="section-cta">
+  <div class="container">
+    <div class="cta-block reveal">
+      <div class="cta-rule"></div>
+      <p class="eyebrow eyebrow-light">Jetzt starten</p>
+      <h2>Aufhören zu raten.<br/>Anfangen umzugestalten.</h2>
+      <p>Teams, die Stellen rund um KI neu gestalten — anstatt nur Tools einzuführen — erzielen konstant 2–3× höhere Produktivitätssteigerungen. RoleShift gibt Ihnen die Karte dafür.</p>
+      <a href="calculator.html" class="btn btn-primary btn-xl">
+        Rolle analysieren
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <a href="index.html" class="logo"><span class="logo-word">Role<span class="logo-word-grad">Shift</span></span></a>
+    <div class="footer-links">
+      <a href="calculator.html">Rollenanalyse</a>
+      <a href="#why">Warum es wichtig ist</a>
+      <a href="#how">So funktioniert es</a>
+      <a href="#preview">Optionen vergleichen</a>
+      <a href="#">Verantwortungsvolle KI</a>
+    </div>
+    <div class="footer-copy">© 2025 RoleShift. Für Teams, die echten Wandel gestalten.</div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
