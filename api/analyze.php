@@ -4,14 +4,27 @@
    Keeps the API key server-side.
    ========================================= */
 
-// Load API key from config outside web root
-$configPath = dirname(__DIR__, 2) . '/roleshift_config.php';
-if (file_exists($configPath)) {
-    require_once $configPath;
-} else {
-    // Fallback: set key directly here if config file not available
-    // REPLACE with your actual key, then delete this line after moving to config
-    define('GEMINI_API_KEY', 'DEIN_API_KEY_HIER');
+// Load API key — tries several locations in order:
+//   1. Two levels above this file (sibling of the roleshift/ folder — preferred, outside web root)
+//   2. One level above this file (inside roleshift/ folder — fallback for flat setups)
+//   3. Same directory as this file (roleshift/api/ — last resort)
+$configCandidates = [
+    dirname(__DIR__, 2) . '/roleshift_config.php',   // e.g. /var/www/roleshift_config.php
+    dirname(__DIR__, 1) . '/roleshift_config.php',   // e.g. /var/www/html/roleshift/roleshift_config.php
+    __DIR__             . '/config.php',              // e.g. /var/www/html/roleshift/api/config.php
+];
+
+$loadedConfig = null;
+foreach ($configCandidates as $candidate) {
+    if (file_exists($candidate)) {
+        require_once $candidate;
+        $loadedConfig = $candidate;
+        break;
+    }
+}
+
+if (!$loadedConfig) {
+    error_log('[RoleShift] roleshift_config.php not found. Checked: ' . implode(', ', $configCandidates));
 }
 
 header('Content-Type: application/json; charset=utf-8');
@@ -42,7 +55,11 @@ $apiKey   = defined('GEMINI_API_KEY') ? GEMINI_API_KEY : '';
 
 if (!$apiKey || $apiKey === 'DEIN_API_KEY_HIER') {
     http_response_code(500);
-    echo json_encode(['error' => 'API key not configured on server']);
+    $hint = $loadedConfig
+        ? "Config found at {$loadedConfig} but GEMINI_API_KEY is empty or still placeholder."
+        : "No config file found. Create roleshift_config.php at: " . $configCandidates[0];
+    error_log("[RoleShift] API key missing. {$hint}");
+    echo json_encode(['error' => 'API key not configured', 'message' => $hint]);
     exit;
 }
 

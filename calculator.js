@@ -116,19 +116,23 @@ generateBtn?.addEventListener('click', async () => {
   state.data.roleTasks = document.getElementById('roleTasks')?.value?.trim() || '';
   showLoading();
 
+  // Priority 1: Gemini Markdown analysis (rich, role-specific output)
   try {
     const markdown = await fetchGeminiMarkdown(state.data);
     renderMarkdownResult(markdown);
+    return;
   } catch (err) {
     console.warn('[RoleShift] Gemini nicht erreichbar, lokales Modell wird verwendet:', err.message);
-    try {
-      const result = computeResult(state.data);
-      result._localFallback = true;
-      renderResult(result);
-    } catch (localErr) {
-      console.error('[RoleShift] Lokales Modell Fehler:', localErr);
-      showApiError(localErr.message);
-    }
+  }
+
+  // Priority 2: Local rules engine (no API required)
+  try {
+    const result = computeResult(state.data);
+    result._localFallback = true;
+    renderResult(result);
+  } catch (localErr) {
+    console.error('[RoleShift] Lokales Modell Fehler:', localErr);
+    showApiError(localErr.message);
   }
 });
 
@@ -141,124 +145,184 @@ const GEMINI_MODELS = [
   'gemini-1.5-flash-8b'
 ];
 
-// System instruction — sets the expert persona and reasoning behavior.
-// Kept separate from the data prompt so Gemini treats it as standing guidance.
-const SYSTEM_INSTRUCTION = `You are Gemini, acting as a senior expert in human–AI collaboration, workforce design, and organizational change.
+// System instruction — expert persona, deep-analysis methodology, and strict output format.
+// This is the primary driver of output quality. Kept server-side via /api/analyze.php.
+const SYSTEM_INSTRUCTION = `You are not the UI. You are the analysis engine behind the RoleShift calculator.
 
-Your core rule:
-Every answer must be tailored to the SPECIFIC ROLE the user has entered.
-You are NEVER allowed to answer with generic HR or office examples that do not clearly fit this role.
+Act as a senior expert in human–AI collaboration and role redesign.
+Your job is to generate a precise, role-specific recommendation for how humans and AI should work together in THIS specific role.
 
-BEFORE YOU ANSWER
+Generic templates are not acceptable. Every sentence must be clearly about THIS role.
 
-1. Internal reasoning
-Before writing the final answer, think explicitly about:
-- In which domain or industry does this role live? (e.g. education, healthcare, logistics, finance…)
-- What are typical core tasks for THIS role in THIS domain?
-- What constraints exist in this domain? (compliance, data privacy, human contact, etc.)
+═══════════════════════════════════════
+STEP 1 — DEEP ROLE ANALYSIS (internal, before writing)
+═══════════════════════════════════════
 
-If the role title is vague, infer the most likely context (e.g. "Teacher" → school education; "Nurse" → clinical care). If you are unsure, pick one plausible context and stick to it consistently.
+1a) Understand the domain
+- What domain does this role belong to? (education, healthcare, logistics, finance, legal, …)
+- What are the typical tasks, information flows, decisions, stakeholders, and constraints in that domain?
+- If the title is vague, pick the most plausible context and stay consistent throughout.
 
-2. Domain consistency check
-For EVERY concrete example, ask yourself:
-- "Would a person with this role realistically do this task in their daily work?"
-- "Would they realistically use this tool in their environment?"
+1b) Interpret the numeric answers
+Use every score intentionally:
+- High repetitiveness + high standardization → strong automation / AI-support potential.
+- High judgement + high error cost + high compliance → human-led; AI only as information layer, mandatory human review.
+- Low documentation / low data structure → fix the foundation before deploying tools.
+- Low AI readiness → start small, invest in enablement first.
 
-If the answer is no, change the example or replace the tool.
+1c) Web research
+Before writing your answer, search your knowledge for current, real AI tools and solution types that people in THIS profession and domain realistically use today.
+Include domain-specific constraints (student data privacy for teachers, patient safety for nurses, GDPR, union rules, etc.).
 
-ROLE-SPECIFIC OUTPUT REQUIREMENTS
+═══════════════════════════════════════
+STEP 2 — ROLE-SPECIFICITY CHECK (internal, before writing)
+═══════════════════════════════════════
 
-Your answer must always be visibly anchored in the given role.
-That means:
-- The role title appears in the introduction.
-- Every section includes examples and language from that profession.
-- All described tasks match the domain.
-- Recommended AI tools are appropriate for that profession and environment.
+For every task, example, and tool you plan to include, ask:
+- "Would a person in this role realistically do this task?"
+- "Would they realistically use this tool in their actual work environment?"
 
-ANALYSIS AND PLAN
+If the answer to either is no, replace it with something that fits.
 
-Analyse the questionnaire deeply and then produce a structured, role-specific plan.
+Domain examples of what NOT to do:
+- For TEACHERS: do not mention applicant tracking, CRM pipelines, or warehouse picking.
+  Talk about: lessons, grading, student feedback, parents, curriculum, LMS, school admin systems.
+- For NURSES: do not mention marketing or HR performance reviews.
+  Talk about: patients, vital signs, medication, documentation, doctor coordination.
+- For WAREHOUSE WORKERS: do not mention strategic planning or board presentations.
+  Talk about: picking routes, scan errors, shift handovers, safety protocols.
 
-1. Summarize the role in context — 1 short paragraph describing what this job looks like in practice in the given domain.
+═══════════════════════════════════════
+STEP 3 — SELF-CHECK (internal, before writing)
+═══════════════════════════════════════
 
-2. Decide a collaboration model JUST for this role — explain how humans and AI should work together; justify with the scores (e.g. high judgement + high error cost = keep humans in charge, AI as assistant).
+Run this consistency check before producing the final output:
+- Do all tasks, examples, and tools clearly match the role and domain?
+- Are there contradictions? (e.g. proposing full automation when judgement + error cost + compliance are all 5/5 — if so, correct it silently.)
+- Do the AI vs human splits add up logically to ~100%?
+- Does the plan address the user's selected priorities?
+- Are domain-specific risks and safeguards addressed (e.g. student data for teachers, patient safety for nurses)?
 
-3. Create a structured plan with concrete steps for THIS profession:
-- "Diese Woche bis 30 Tage": 3–7 specific actions in the daily work of this role.
-- "Nächste 90 Tage": 3–7 actions for deeper integration.
-- "Langfristig": 3–7 actions for continuous improvement.
+Silently correct any inconsistencies. Only output the corrected version.
 
-Each action must describe what exactly changes in this professional's workflow, what the human does, and what AI does.
-
-TOOLS: ALWAYS ROLE-SPECIFIC
-
-Before recommending tools, search the web for AI tools relevant to this profession and domain.
-Then recommend 3–7 concrete tools that fit THIS job. Never recommend tools that obviously don't fit the role.
-
-RESPONSIBLE AND HUMAN-CENTRIC TONE
-- Do NOT frame AI as a way to justify layoffs.
-- Emphasize that humans stay responsible for critical decisions, relationships, and accountability.
-- Separate technical automation potential from organizational reality (skills, culture, regulation).
-- Highlight where upskilling or role redesign is needed.
-
+═══════════════════════════════════════
 OUTPUT FORMAT AND LANGUAGE
-- Write your entire answer in German (professional business German — Geschäftsdeutsch).
-- All headings, body text, tables, and examples must be in German.
-- Return structured Markdown optimized for a web dashboard.
-- Use this exact structure:
+═══════════════════════════════════════
+
+- Write your ENTIRE answer in German (professional Geschäftsdeutsch).
+- ALL headings, body text, tables, examples, and tool descriptions must be in German.
+- Return structured Markdown. Use EXACTLY this section structure — no extra sections, no reordering:
 
 # Kollaborationsmodell für <STELLENBEZEICHNUNG>
-Kurze, stellenspezifische Zusammenfassung.
+1 Absatz: Rollenkontext und empfohlenes Mensch-KI-Modell.
+3–5 Aufzählungspunkte: Warum dieses Modell zu den konkreten Bewertungswerten passt.
 
 ## Aufgabenverteilung in dieser Stelle
-Kurze Erklärung + Tabelle:
+Kurze Einleitung in der Sprache des Berufsfelds (1–2 Sätze).
+Dann diese Tabelle (nur realistische Aufgabenbereiche für dieses Berufsbild):
+
 Aufgabenbereich | KI-unterstützt | Automatisierbar | Menschlich geleitet | Menschliche Prüfung
+---|---|---|---|---
+<Bereich 1> | ja/nein | ja/nein | ja/nein | ja/nein
 
 ## Was KI in dieser Stelle übernehmen sollte
-Aufzählungspunkte mit konkreten Aufgaben in der Sprache dieser Berufsgruppe.
+3–7 Stichpunkte. Jeder Punkt:
+**Aufgabenname** – wie KI konkret hilft und was der Mensch weiterhin tut (in der Fachsprache dieser Berufsgruppe).
 
 ## Was Menschen behalten sollten
-Aufzählungspunkte mit Aufgaben, die menschlich geleitet bleiben — mit Fachsprache des Berufsfelds.
+3–7 Stichpunkte: Urteilsvermögen, Beziehungen, Verantwortung, risikoreiche Entscheidungen — in der Fachsprache des Berufsfelds.
 
 ## Umsetzungsplan für <STELLENBEZEICHNUNG>
-Aufgeteilt in:
+
 ### Diese Woche bis 30 Tage
+3–7 sehr konkrete Schritte im täglichen Workflow dieses Berufsbilds.
+Für JEDEN Schritt nennen:
+- Wer ist beteiligt? (z.B. Lehrerin, Schulleitung, IT-Admin)
+- Was ändert sich konkret in der Praxis?
+- Woran erkennt man, dass es funktioniert? (einfacher, messbarer Indikator)
+
 ### Nächste 90 Tage
+3–7 Schritte zur tieferen Integration — gleiche Detailtiefe (Wer? Was ändert sich? Indikator?).
+
 ### Langfristig
+3–7 Schritte zur kontinuierlichen Verbesserung — gleiche Detailtiefe.
 
 ## Empfohlene KI-Tools für dieses Berufsbild
-Liste konkreter Tools, jedes klar an diese Stelle gebunden.
+Kurze Einleitung (1–2 Sätze), dann 3–7 Tools:
+- **Tool- oder Kategorienname** – was es konkret für diese Rolle tut (2–3 Sätze). Warum es zu den Rahmenbedingungen des Berufsfelds passt (Datenschutz, Regulation, Praxis-Kontext).
+Nur reale Tools oder klar definierte Tool-Kategorien. Niemals Tools, die offensichtlich nicht passen.
 
 ## Risiken und Schutzmaßnahmen in diesem Bereich
-Bereichsspezifische Risiken und Gegenmaßnahmen.`;
+3–6 Punkte: jeweils ein bereichsspezifisches Risiko + 1 Satz konkrete Gegenmaßnahme.
+
+## Manager-Zusammenfassung
+3–5 prägnante Stichpunkte für Führungskräfte dieses Berufsfelds:
+Kernaussagen, erwartete Vorteile, notwendige Investitionen — sofort nutzbar für ein Briefing.`;
 
 function buildPrompt(d) {
-  const scale = v => v === 1 ? 'sehr niedrig (1/5)' : v === 2 ? 'niedrig (2/5)' : v === 3 ? 'mittel (3/5)' : v === 4 ? 'hoch (4/5)' : 'sehr hoch (5/5)';
-  const goalLabels = { time: 'Zeit sparen', admin: 'Verwaltung reduzieren', quality: 'Qualität verbessern', compliance: 'Compliance sicherstellen', speed: 'Durchlaufzeit verkürzen', focus: 'Menschen auf hochwertige Arbeit fokussieren' };
+  // Readable scale labels for Gemini
+  const scale = v => {
+    if (!v || v <= 0) return 'nicht angegeben';
+    return ['', 'sehr niedrig (1/5)', 'niedrig (2/5)', 'mittel (3/5)', 'hoch (4/5)', 'sehr hoch (5/5)'][Math.min(5, v)];
+  };
+  const goalLabels = {
+    time:       'Zeit sparen',
+    admin:      'Verwaltung reduzieren',
+    quality:    'Qualität verbessern',
+    compliance: 'Vertrauen & Compliance sichern',
+    speed:      'Durchlaufzeit verkürzen',
+    focus:      'Auf Kernaufgaben / höherwertige Arbeit fokussieren'
+  };
   const selectedGoals = (d.goals || []).map(g => goalLabels[g] || g).join(', ') || 'nicht angegeben';
-  const role = d.roleTitle || 'Unbekannte Stelle';
-  const tasks = d.roleTasks ? `\nBeschreibung der Tätigkeiten: ${d.roleTasks}` : '';
+  const role  = d.roleTitle || 'Unbekannte Stelle';
+  const tasks = d.roleTasks
+    ? `\nBeschreibung der tatsächlichen Tätigkeiten (vom Nutzer eingegeben): "${d.roleTasks}"`
+    : '\n(Keine detaillierte Tätigkeitsbeschreibung angegeben — bitte aus dem Rollentitel und Domain ableiten.)';
 
-  return `Analysiere die folgende Rollenbewertung und erstelle eine stellenspezifische Empfehlung.
+  return `Analysiere die folgende Rollenbewertung und erstelle eine vollständige, stellenspezifische Analyse gemäß den Vorgaben im System-Prompt.
 
-Stelle: ${role}${tasks}
-Geschäftliche Prioritäten: ${selectedGoals}
+══ ROLLE ══
+Stellenbezeichnung: ${role}${tasks}
 
-Bewertungswerte (1 = sehr niedrig, 5 = sehr hoch):
-- Repetitivität der Aufgaben: ${scale(d.repetitive)}
+══ GESCHÄFTLICHE PRIORITÄTEN ══
+${selectedGoals}
+
+══ BEWERTUNGSWERTE (1 = sehr niedrig, 5 = sehr hoch) ══
+
+AUFGABENSTRUKTUR
+- Repetitivität der täglichen Arbeit: ${scale(d.repetitive)}
+  (1 = sehr abwechslungsreich · 5 = sehr routinemäßig)
 - Standardisierung der Prozesse: ${scale(d.standardized)}
+  (1 = ad-hoc, kontextabhängig · 5 = vollständig regelbasiert)
 - Erforderliches Urteilsvermögen: ${scale(d.judgment)}
-- Kundenkontakt-Intensität: ${scale(d.customerFacing)}
-- Fehlerkosten: ${scale(d.costOfMistakes)}
-- Compliance / Datensensibilität: ${scale(d.sensitivity)}
-- Verantwortungsebene: ${scale(d.accountability)}
-- Prüfbedarf vor Verwendung von Ergebnissen: ${scale(d.reviewNeeded)}
-- Qualität der Prozessdokumentation: ${scale(d.documentation)}
-- Qualität der Datenstruktur: ${scale(d.dataStructure)}
-- Offenheit des Teams für KI: ${scale(d.aiReadiness)}
-- Bereits aktiv genutzte KI-Tools: ${scale(d.toolsAdopted)}
+  (1 = überwiegend regelbasiert · 5 = Urteil ist die Kernaufgabe)
+- Kunden-/Beziehungsorientierung: ${scale(d.customerFacing)}
+  (1 = intern / Back-Office · 5 = direkter Kundenkontakt)
 
-Erstelle jetzt die vollständige Analyse auf Deutsch gemäß den Vorgaben im System-Prompt.`;
+RISIKO & VERANTWORTUNG
+- Fehlerkosten: ${scale(d.costOfMistakes)}
+  (1 = leicht korrigierbar · 5 = schwerwiegend, schwer rückgängig)
+- Compliance / Datensensibilität: ${scale(d.sensitivity)}
+  (1 = keine · 5 = hohe regulatorische Anforderungen)
+- Verantwortungsebene: ${scale(d.accountability)}
+  (1 = geteilt / unklar · 5 = namentliche Person immer verantwortlich)
+- Prüfbedarf vor Output-Verwendung: ${scale(d.reviewNeeded)}
+  (1 = direkt verwendet, keine Prüfung · 5 = immer geprüft und freigegeben)
+
+TEAM & UMSETZBARKEIT
+- Qualität der Prozessdokumentation: ${scale(d.documentation)}
+  (1 = hauptsächlich im Kopf der Mitarbeiter · 5 = klar schriftlich festgehalten)
+- Qualität der Datenstruktur: ${scale(d.dataStructure)}
+  (1 = unstrukturiert, inkonsistent · 5 = sauber und gut organisiert)
+- Offenheit des Teams für KI: ${scale(d.aiReadiness)}
+  (1 = skeptisch, veränderungsresistent · 5 = enthusiastische Early Adopter)
+- Bereits aktiv genutzte KI/Automatisierung: ${scale(d.toolsAdopted)}
+  (1 = überhaupt keine · 5 = im täglichen Workflow integriert)
+
+══ AUFGABE ══
+Erstelle jetzt die vollständige, stellenspezifische Analyse auf Deutsch.
+Halte dich exakt an die Abschnittsstruktur aus dem System-Prompt.
+Jede Aussage muss klar zur Stelle "${role}" und ihrer Branche passen.`;
 }
 
 async function fetchGeminiMarkdown(d) {
@@ -266,7 +330,7 @@ async function fetchGeminiMarkdown(d) {
     systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
     contents: [{ parts: [{ text: buildPrompt(d) }] }],
     models: GEMINI_MODELS,
-    generationConfig: { maxOutputTokens: 3200, temperature: 0.4 }
+    generationConfig: { maxOutputTokens: 4096, temperature: 0.35 }
   };
 
   const response = await fetch('/api/analyze.php', {
@@ -283,6 +347,273 @@ async function fetchGeminiMarkdown(d) {
   const { markdown } = await response.json();
   if (!markdown) throw new Error('Leere Antwort vom Server');
   return markdown;
+}
+
+// =========================================
+// STRUCTURED ROLE ANALYSIS — new endpoint
+// =========================================
+
+/**
+ * Calls /api/role-analysis.php and returns the typed result object.
+ * The backend builds the Gemini prompt, forces JSON output, sanitises, and returns.
+ */
+async function fetchStructuredAnalysis(d) {
+  const response = await fetch('/api/role-analysis.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roleConfig: d })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${response.status}`);
+  }
+
+  const { result, error } = await response.json();
+  if (error) throw new Error(error);
+  if (!result) throw new Error('Leere Antwort vom Server');
+  return result;
+}
+
+// --- STRUCTURED RESULT RENDERER ----------
+
+/**
+ * Renders the structured Gemini JSON response as a rich,
+ * fully-typed result page. Mirrors the visual language of renderResult()
+ * but adds task-split table, manager summary, and role-specific tools
+ * as promised on the landing page.
+ *
+ * @param {Object} data  Sanitised result from /api/role-analysis.php
+ */
+function renderStructuredResult(data) {
+  const res  = document.getElementById('step-result');
+  const role = esc(data.roleTitle || state.data.roleTitle || 'Stelle');
+  const wd   = data.workDistribution || { automatable: 25, aiAssisted: 35, humanLed: 30, reviewRequired: 10 };
+
+  res.innerHTML = `
+<div class="result-wrap">
+
+  <!-- ① Summary / collaboration model -->
+  <div class="result-hero">
+    <div class="result-model-badge">${esc(data.collaborationModelName || 'KI-Analyse')}</div>
+    <h2 class="result-headline">${esc(data.collaborationModelHeadline || '')}</h2>
+    <p class="result-expert-summary">${esc(data.collaborationModelSummary || '')}</p>
+  </div>
+
+  <!-- ② Work distribution bars -->
+  <div class="result-split-card">
+    <div class="result-section-label">Arbeitsaufteilung — ${role}</div>
+    <div class="result-bars">
+      ${resultBar('Automatisierbar',      wd.automatable,    'auto')}
+      ${resultBar('KI-unterstützt',       wd.aiAssisted,     'ai')}
+      ${resultBar('Menschlich geleitet',  wd.humanLed,       'human')}
+      ${resultBar('Prüfung erforderlich', wd.reviewRequired, 'review')}
+    </div>
+  </div>
+
+  <!-- ③ Task-split table (aufgabenspezifische Orientierung) -->
+  ${renderTaskSplit(data.taskSplit || [], role)}
+
+  <!-- ④ AI vs. Human responsibilities (2-column) -->
+  <div class="result-tasks-grid">
+    <div class="result-task-col">
+      <div class="result-task-col-title col-title-ai">Mit KI starten</div>
+      <ul class="result-task-list">
+        ${(data.aiResponsibilities || []).map(t => `<li>${esc(t)}</li>`).join('')}
+      </ul>
+    </div>
+    <div class="result-task-col">
+      <div class="result-task-col-title col-title-human">Menschlich geleitet behalten</div>
+      <ul class="result-task-list">
+        ${(data.humanResponsibilities || []).map(t => `<li>${esc(t)}</li>`).join('')}
+      </ul>
+    </div>
+  </div>
+
+  <!-- ⑤ Phasenweiser Umsetzungsfahrplan -->
+  <div class="result-phases">
+    <div class="result-section-label">Umsetzungsfahrplan — ${role}</div>
+    <div class="result-phase-grid">
+      <div class="result-phase">
+        <div class="rp-label">Diese Woche bis 30 Tage</div>
+        <div class="rp-items">
+          ${(data.implementationPlan?.next30Days || []).map(a => `<div class="rp-item">${esc(a)}</div>`).join('')}
+        </div>
+      </div>
+      <div class="result-phase">
+        <div class="rp-label rp-label-2">Nächste 90 Tage</div>
+        <div class="rp-items">
+          ${(data.implementationPlan?.next90Days || []).map(a => `<div class="rp-item">${esc(a)}</div>`).join('')}
+        </div>
+      </div>
+      <div class="result-phase">
+        <div class="rp-label rp-label-3">Langfristig</div>
+        <div class="rp-items">
+          ${(data.implementationPlan?.later || []).map(a => `<div class="rp-item">${esc(a)}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ Domänenspezifische KI-Tool-Empfehlungen -->
+  ${renderToolsSection(data.recommendedTools || [], role)}
+
+  <!-- ⑦ Risiken & Leitplanken -->
+  ${renderRisksSection(data.risksAndSafeguards || [])}
+
+  <!-- ⑧ Manager-Zusammenfassung (neu) -->
+  ${renderManagerSummary(data.managerSummary || [])}
+
+  <!-- ⑨ Implementierungsbereitschaft -->
+  <div class="result-readiness">
+    <div class="readiness-score-block">
+      <div class="readiness-number" id="readinessNum">0</div>
+      <div class="readiness-label">Bereitschaft</div>
+    </div>
+    <div class="readiness-right">
+      <div class="result-section-label" style="margin-bottom:10px">Implementierungsbereitschaft</div>
+      <div class="readiness-track-wrap">
+        <div class="readiness-track">
+          <div class="readiness-fill ${readinessClass(data.readinessScore || 50)}" id="readinessFill" style="width:0"></div>
+        </div>
+      </div>
+      <p class="readiness-desc">${esc(data.readinessDescription || '')}</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="result-footer">
+    <p class="result-disclaimer">Diese Analyse wurde von einem KI-Modell erstellt und dient als Ausgangspunkt für eine fundierte Teamdiskussion — keine Direktive. Menschliches Urteilsvermögen, organisatorischer Kontext und direkter Input der betroffenen Mitarbeitenden sollten stets leiten, wie Stellen neu gestaltet werden.</p>
+    <div class="result-actions">
+      <button class="btn btn-ghost" id="restartBtn">Weitere Stelle analysieren</button>
+      <a href="index.html" class="btn btn-primary">Zurück zu RoleShift</a>
+    </div>
+  </div>
+
+</div>`;
+
+  // Animate bars and readiness gauge
+  setTimeout(() => {
+    document.querySelectorAll('[data-target]').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+    const fill  = document.getElementById('readinessFill');
+    const num   = document.getElementById('readinessNum');
+    const score = data.readinessScore || 50;
+    if (fill) fill.style.width = score + '%';
+    if (num)  animateCount(num, score, '%');
+  }, 120);
+
+  document.getElementById('restartBtn')?.addEventListener('click', restart);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// --- STRUCTURED RESULT HELPERS -----------
+
+function readinessClass(score) {
+  if (score < 35) return 'low';
+  if (score < 65) return 'medium';
+  return 'high';
+}
+
+/**
+ * Task-split table — shows each task area with coloured dots
+ * for the four attributes: automatable / AI-assisted / human-led / human-review.
+ * Delivers the "aufgabenspezifische Orientierung" promised on the landing page.
+ */
+function renderTaskSplit(taskSplit, role) {
+  if (!taskSplit.length) return '';
+  return `
+<div class="result-task-split">
+  <div class="result-section-label">Aufgabenverteilung — ${role}</div>
+  <div class="rts-wrap">
+    <table class="rts-table">
+      <thead>
+        <tr>
+          <th class="rts-th-area">Aufgabenbereich</th>
+          <th class="rts-th-dot" title="Automatisierbar"><span class="rts-col-label">Auto</span></th>
+          <th class="rts-th-dot" title="KI-unterstützt"><span class="rts-col-label">KI</span></th>
+          <th class="rts-th-dot" title="Menschlich geleitet"><span class="rts-col-label">Mensch</span></th>
+          <th class="rts-th-dot" title="Menschliche Prüfung"><span class="rts-col-label">Prüfung</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${taskSplit.map(t => `
+        <tr>
+          <td class="rts-td-area">
+            <div class="rts-area-name">${esc(t.area)}</div>
+            ${t.description ? `<div class="rts-area-desc">${esc(t.description)}</div>` : ''}
+          </td>
+          <td class="rts-td-dot"><span class="rts-dot ${t.automatable ? 'rts-dot-auto' : 'rts-dot-off'}"></span></td>
+          <td class="rts-td-dot"><span class="rts-dot ${t.aiAssisted  ? 'rts-dot-ai'   : 'rts-dot-off'}"></span></td>
+          <td class="rts-td-dot"><span class="rts-dot ${t.humanLed   ? 'rts-dot-human' : 'rts-dot-off'}"></span></td>
+          <td class="rts-td-dot"><span class="rts-dot ${t.humanReview ? 'rts-dot-review': 'rts-dot-off'}"></span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <div class="rts-legend">
+    <span class="rts-legend-item"><span class="rts-dot rts-dot-auto"></span>Automatisierbar</span>
+    <span class="rts-legend-item"><span class="rts-dot rts-dot-ai"></span>KI-unterstützt</span>
+    <span class="rts-legend-item"><span class="rts-dot rts-dot-human"></span>Menschlich geleitet</span>
+    <span class="rts-legend-item"><span class="rts-dot rts-dot-review"></span>Prüfung erforderlich</span>
+    <span class="rts-legend-item"><span class="rts-dot rts-dot-off"></span>Nicht zutreffend</span>
+  </div>
+</div>`;
+}
+
+/**
+ * Recommended tools — domänenspezifische Tool-Empfehlungen as promised.
+ * Shows name, category, why, and what the person concretely does with it.
+ */
+function renderToolsSection(tools, role) {
+  if (!tools.length) return '';
+  return `
+<div class="result-ai-tools">
+  <div class="result-section-label">Empfohlene KI-Tools für ${role}</div>
+  <div class="result-tools-grid">
+    ${tools.map(t => `
+    <div class="result-tool-card">
+      <div class="tool-card-top">
+        <span class="tool-name">${esc(t.name)}</span>
+        <span class="tool-category">${esc(t.category)}</span>
+      </div>
+      <p class="tool-use">${esc(t.reason)}</p>
+      ${t.fitForRole ? `<p class="tool-fit">${esc(t.fitForRole)}</p>` : ''}
+    </div>`).join('')}
+  </div>
+</div>`;
+}
+
+/** Risks & safeguards section */
+function renderRisksSection(risks) {
+  if (!risks.length) return '';
+  return `
+<div class="result-risks">
+  <div class="result-section-label">Risiken &amp; Leitplanken</div>
+  <div class="result-risk-list">
+    ${risks.map(r => `
+    <div class="result-risk-item">
+      <div class="risk-icon"></div>
+      <p>${esc(r)}</p>
+    </div>`).join('')}
+  </div>
+</div>`;
+}
+
+/**
+ * Manager summary — new section that delivers the "sofort nutzbar für Führungskräfte"
+ * promise: key takeaways ready to share with stakeholders.
+ */
+function renderManagerSummary(items) {
+  if (!items.length) return '';
+  return `
+<div class="result-manager-summary">
+  <div class="result-section-label result-section-label--mgr">Manager-Zusammenfassung</div>
+  <ul class="result-mgr-list">
+    ${items.map(item => `<li>${esc(item)}</li>`).join('')}
+  </ul>
+</div>`;
 }
 
 function renderMarkdownResult(markdownText) {

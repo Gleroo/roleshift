@@ -400,47 +400,46 @@
             </div>
           </div>
         </div>
-        <!-- Panel 4 — mirrors real calculator result -->
-        <div class="how-vis-panel how-vis-hidden" data-vis="4">
-          <div class="hvp-label">Schritt 4 von 4 — Personalisiertes Ergebnis</div>
-          <span class="result-model-badge" style="margin-bottom:14px">KI-Entwurf, menschliche Prüfung</span>
-          <div style="font-size:1.05rem;font-weight:700;letter-spacing:-0.02em;color:var(--text);margin-bottom:6px;line-height:1.2">KI generiert. Menschen verantworten das Ergebnis.</div>
-          <p style="font-size:0.75rem;color:var(--text-3);line-height:1.6;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">Compliance und Fehlerkosten prägen das Modell. KI entwirft — Menschen zeichnen ab.</p>
-          <div class="result-bars" style="margin-bottom:18px">
-            <div>
-              <div class="result-bar-meta"><span class="result-bar-label">Automatisierbar</span><span class="result-bar-pct pct-auto">29%</span></div>
-              <div class="result-track"><div class="result-fill fill-auto" style="width:29%;transition:none"></div></div>
+        <!-- Panel 4 — hero-card visual (flat wrapper = no double border) -->
+        <div class="how-vis-panel how-vis-panel--flat how-vis-hidden" data-vis="4">
+          <div class="hv-card">
+            <div class="hv-card-top">
+              <div>
+                <div class="hv-card-label">Schritt 4 von 4 — Ergebnis</div>
+                <div class="hv-role-name">Personalisiertes Ergebnis — Finance Analyst</div>
+              </div>
             </div>
-            <div>
-              <div class="result-bar-meta"><span class="result-bar-label">KI-unterstützt</span><span class="result-bar-pct pct-ai">35%</span></div>
-              <div class="result-track"><div class="result-fill fill-ai" style="width:35%;transition:none"></div></div>
+            <div class="hv-bars">
+              <div class="hv-bar-row">
+                <span>Automatisierbar</span>
+                <div class="hv-track"><div class="hv-fill hv-fill-auto" data-w="29"></div></div>
+                <span class="hv-pct pct-auto">29%</span>
+              </div>
+              <div class="hv-bar-row">
+                <span>KI-unterstützt</span>
+                <div class="hv-track"><div class="hv-fill hv-fill-ai" data-w="35"></div></div>
+                <span class="hv-pct pct-ai">35%</span>
+              </div>
+              <div class="hv-bar-row">
+                <span>Menschlich geleitet</span>
+                <div class="hv-track"><div class="hv-fill hv-fill-human" data-w="24"></div></div>
+                <span class="hv-pct pct-human">24%</span>
+              </div>
+              <div class="hv-bar-row">
+                <span>Prüfung erforderlich</span>
+                <div class="hv-track"><div class="hv-fill hv-fill-review" data-w="12"></div></div>
+                <span class="hv-pct pct-review">12%</span>
+              </div>
             </div>
-            <div>
-              <div class="result-bar-meta"><span class="result-bar-label">Menschlich geleitet</span><span class="result-bar-pct pct-human">24%</span></div>
-              <div class="result-track"><div class="result-fill fill-human" style="width:24%;transition:none"></div></div>
-            </div>
-            <div>
-              <div class="result-bar-meta"><span class="result-bar-label">Prüfung erforderlich</span><span class="result-bar-pct pct-review">12%</span></div>
-              <div class="result-track"><div class="result-fill fill-review" style="width:12%;transition:none"></div></div>
-            </div>
+            <div class="hv-divider"></div>
+            <div class="hv-summary">„KI übernimmt Berichtserstellung und Datenabgleich — Compliance-Abzeichnung und strategische Entscheidungen bleiben beim Menschen."</div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div>
-              <div class="result-task-col-title col-title-ai" style="font-size:0.56rem;margin-bottom:10px;padding-bottom:8px">Mit KI starten</div>
-              <ul class="result-task-list">
-                <li>Berichtserstellung</li>
-                <li>Varianzkommentare</li>
-                <li>Datenabgleich</li>
-              </ul>
-            </div>
-            <div>
-              <div class="result-task-col-title col-title-human" style="font-size:0.56rem;margin-bottom:10px;padding-bottom:8px">Menschlich geleitet</div>
-              <ul class="result-task-list">
-                <li>Compliance-Abzeichnung</li>
-                <li>Vorstandspräsentationen</li>
-                <li>Risikoentscheidungen</li>
-              </ul>
-            </div>
+          <div class="hv-flow" style="margin-top:14px">
+            <div class="hv-node hv-node-done">Stelle beschrieben</div>
+            <div class="hv-line"></div>
+            <div class="hv-node hv-node-done">Bewertet</div>
+            <div class="hv-line"></div>
+            <div class="hv-node hv-node-active">Plan erhalten</div>
           </div>
         </div>
       </div>

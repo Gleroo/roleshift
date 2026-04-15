@@ -567,6 +567,19 @@ em {
   background: linear-gradient(to right, transparent, var(--accent), transparent);
   opacity: 0.35;
 }
+/*
+ * Flat variant — used for Panel 4 which hosts a self-contained hv-card.
+ * Removes the outer panel's own border/background/shadow so only the
+ * hv-card shows, creating one unified visual instead of a card-in-a-card.
+ */
+.how-vis-panel--flat {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.how-vis-panel--flat::before { display: none; }
+
 .how-vis-hidden { display: none; }
 
 /* Eyebrow label — matches calc-eyebrow */
@@ -578,6 +591,26 @@ em {
   background: var(--accent-dim); border: 1px solid var(--border-2);
   padding: 5px 11px; border-radius: var(--r-sm);
   margin-bottom: 20px;
+}
+
+/* Panel 4 — "Analyse fertig" done-state button */
+.hvp-done-row { margin-bottom: 18px; }
+.hvp-done-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem; font-weight: 600; line-height: 1;
+  padding: 10px 20px;
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid rgba(74,222,152,.28);
+  border-radius: var(--r);
+  cursor: default;
+  pointer-events: none;
+}
+[data-theme="light"] .hvp-done-btn {
+  background: rgba(22,163,74,.08);
+  color: #16a34a;
+  border-color: rgba(22,163,74,.25);
 }
 
 /* Big question heading — matches calc-q */
@@ -820,12 +853,52 @@ em {
 [data-theme="light"] .ct-good { color: #16a34a; }
 
 /* ---- RESPONSIVE ---- */
-@media (max-width: 680px) {
-  .ct-head-empty { display: none; }
-  .ct-head-row   { grid-template-columns: 1fr 1.15fr 1fr; }
-  .ct-grid-row   { grid-template-columns: 1fr 1.15fr 1fr; }
-  .ct-feat-cell  { grid-column: 1 / -1; border-bottom: 1px solid var(--border); padding: 14px 20px; }
-  .ct-cell       { padding: 14px 10px; }
+@media (max-width: 720px) {
+  /* Hide the multi-column header — replaced by the row-level feature label */
+  .ct-head-row { display: none; }
+
+  /* Each data row: flex row stretching to match tallest child */
+  .ct-grid-row {
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Hide the two non-RoleShift value columns */
+  .ct-col-head:not(.is-rs),
+  .ct-cell:not(.is-rs) { display: none; }
+
+  /* LEFT — feature label, expands to fill remaining width */
+  .ct-feat-cell {
+    flex: 1 1 auto;
+    grid-column: auto;
+    border-bottom: none;
+    padding: 16px 20px;
+  }
+
+  /* Show the subtitle on mobile (there's now room since other columns are gone) */
+  .ct-feat-sub { display: block; }
+
+  /* VERTICAL DIVIDER + RIGHT — narrow green value column */
+  .ct-cell.is-rs {
+    flex: 0 0 92px;
+    min-width: 0;
+    border-left: 1px solid rgba(74,222,152,.35);
+    border-right: none;
+    background: rgba(74,222,152,.055);
+    padding: 16px 14px;
+  }
+
+  /* Slightly smaller value text on narrow screens */
+  .ct-val { font-size: 0.75rem; }
+}
+
+/* Light-mode overrides for the mobile divider */
+@media (max-width: 720px) {
+  [data-theme="light"] .ct-cell.is-rs {
+    border-left-color: rgba(22,163,74,.3);
+    background: rgba(22,163,74,.05);
+  }
 }
 
 /* CTA below table */
@@ -1089,17 +1162,6 @@ em {
 }
 
 @media (max-width: 480px) {
-  /* Comparison table — nur RoleShift-Spalte anzeigen */
-  .ct-head-row     { grid-template-columns: 1fr 1.4fr; }
-  .ct-grid-row     { grid-template-columns: 1fr 1.4fr; }
-  .ct-col-head:not(.is-rs)  { display: none; }
-  .ct-cell:not(.is-rs)      { display: none; }
-  .ct-feat-cell    { grid-column: auto; border-bottom: none;
-                     border-right: 1px solid var(--border); padding: 14px 16px; }
-  .ct-feat-sub     { display: none; }
-  .ct-cell.is-rs   { padding: 14px 16px; }
-  .ct-head-empty   { display: none; }
-
   /* FAQ — noch kleiner */
   .faq-title       { font-size: 1.4rem; }
   .faq-num         { margin-top: 4px; }
