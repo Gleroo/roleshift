@@ -156,6 +156,7 @@ function howNext() {
 }
 
 function startHowTimer() {
+  if (window.innerWidth <= 800) return; // visuelle Panels auf Mobile versteckt
   clearInterval(howTimer);
   howTimer = setInterval(howNext, HOW_INTERVAL);
 }
@@ -176,4 +177,25 @@ howWrap?.addEventListener('mouseleave', () => {
   howPaused = false;
   startHowTimer();
 });
+
+// --- FAQ ACCORDION (single mode) ---------
+const faqItems = document.querySelectorAll('.faq-item');
+document.querySelectorAll('.faq-trigger').forEach(trigger => {
+  trigger.addEventListener('click', () => {
+    const item = trigger.closest('.faq-item');
+    if (!item) return;
+    const isOpen = item.dataset.state === 'open';
+    // Close all
+    faqItems.forEach(i => {
+      i.dataset.state = 'closed';
+      i.querySelector('.faq-trigger')?.setAttribute('aria-expanded', 'false');
+    });
+    // Open this one if it was closed
+    if (!isOpen) {
+      item.dataset.state = 'open';
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+
 

@@ -9,8 +9,8 @@
   <meta name="referrer" content="strict-origin-when-cross-origin" />
 
   <!-- Primary Meta -->
-  <title>KI-Rollenanalyse in 5 Schritten — RoleShift</title>
-  <meta name="description" content="Analysieren Sie jede Stelle in fünf Schritten: Wo sollte KI unterstützen, wo bleibt der Mensch unverzichtbar? Kostenloser Rollenanalysator für Führungskräfte und HR-Teams." />
+  <title>KI-Rollenanalyse starten — Stelle in 5 Schritten analysieren | RoleShift</title>
+  <meta name="description" content="Welche Aufgaben kann KI übernehmen, welche brauchen Menschen? Analysieren Sie jede Stelle in 5 Minuten und erhalten Sie einen konkreten KI-Implementierungsplan." />
   <meta name="robots" content="index, follow" />
   <meta name="format-detection" content="telephone=no" />
   <meta name="theme-color" content="#06141B" />
@@ -23,15 +23,15 @@
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="de_DE" />
   <meta property="og:site_name" content="RoleShift" />
-  <meta property="og:title" content="KI-Rollenanalyse in 5 Schritten — RoleShift" />
-  <meta property="og:description" content="Analysieren Sie jede Stelle in fünf Schritten und erhalten Sie eine strukturierte KI- und Mensch-Kollaborationsempfehlung. Kostenlos." />
+  <meta property="og:title" content="KI-Rollenanalyse starten — Stelle in 5 Schritten analysieren | RoleShift" />
+  <meta property="og:description" content="Welche Aufgaben kann KI übernehmen, welche brauchen Menschen? Analysieren Sie jede Stelle in 5 Minuten — kostenlos, ohne Registrierung." />
   <meta property="og:url" content="https://DEINE-DOMAIN.de/calculator.html" />
   <meta property="og:image" content="https://DEINE-DOMAIN.de/og-image.png" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="KI-Rollenanalyse in 5 Schritten — RoleShift" />
-  <meta name="twitter:description" content="Analysieren Sie jede Stelle in fünf Schritten und erhalten Sie eine strukturierte KI- und Mensch-Kollaborationsempfehlung. Kostenlos." />
+  <meta name="twitter:title" content="KI-Rollenanalyse starten — Stelle in 5 Schritten analysieren | RoleShift" />
+  <meta name="twitter:description" content="Welche Aufgaben kann KI übernehmen, welche brauchen Menschen? Analysieren Sie jede Stelle in 5 Minuten — kostenlos, ohne Registrierung." />
   <meta name="twitter:image" content="https://DEINE-DOMAIN.de/og-image.png" />
 
   <!-- Favicon -->
@@ -47,12 +47,54 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="calculator.css" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://DEINE-DOMAIN.de/calculator.html#app",
+        "name": "RoleShift KI-Rollenanalyse",
+        "url": "https://DEINE-DOMAIN.de/calculator.html",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "description": "Analysiert jede Berufsstelle in 5 Schritten auf KI-Potenzial und erstellt einen stellenspezifischen Mensch-KI-Kollaborationsplan mit Umsetzungsfahrplan.",
+        "inLanguage": "de-DE",
+        "isPartOf": { "@id": "https://DEINE-DOMAIN.de/#app" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "RoleShift",
+            "item": "https://DEINE-DOMAIN.de/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "KI-Rollenanalyse",
+            "item": "https://DEINE-DOMAIN.de/calculator.html"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body class="calc-body">
 
 <header class="calc-header">
   <div class="calc-header-inner">
-    <a href="index.html" class="logo">
+    <a href="index.html" class="logo" aria-label="RoleShift — Startseite">
+      <svg class="logo-icon" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <rect class="logo-icon-sq"       x="1"  y="11" width="25" height="25" rx="5.5"/>
+        <rect class="logo-icon-front-sq" x="14" y="4"  width="25" height="25" rx="5.5"/>
+      </svg>
       <span class="logo-word">Role<span class="logo-word-grad">Shift</span></span>
     </a>
     <div class="calc-progress-wrap">

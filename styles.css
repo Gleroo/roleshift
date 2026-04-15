@@ -203,23 +203,46 @@ em {
 .header-inner { display: flex; align-items: center; height: 100%; gap: 28px; }
 
 /* Logo */
-.logo { display: flex; align-items: center; }
+.logo { display: flex; align-items: center; gap: 9px; }
+
+.logo-icon {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+/* Dark mode: beide Quadrate weiß, Stroke = Hintergrundfarbe als Trennlinie */
+.logo-icon-sq      { fill: #ffffff; }
+.logo-icon-front-sq { fill: #ffffff; stroke: var(--bg); stroke-width: 2; }
+
+/* Light mode: beide Quadrate schwarz, Stroke = Hintergrundfarbe */
+[data-theme="light"] .logo-icon-sq       { fill: #0a0a0a; }
+[data-theme="light"] .logo-icon-front-sq { fill: #0a0a0a; stroke: var(--bg); stroke-width: 2; }
+
 .logo-word {
   font-family: 'Inter', system-ui, sans-serif;
   font-weight: 800;
   font-size: 1.25rem;
   letter-spacing: -0.04em;
-  color: var(--text-2);
+  color: #ffffff;
   line-height: 1;
 }
+
+/* "Shift" — flaches Grau (kein Gradient) */
 .logo-word-grad {
-  color: #ffffff;
+  color: #6b7280;
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: #6b7280;
+  background-clip: unset;
 }
+
 [data-theme="light"] .logo-word {
-  color: var(--text);
+  color: #0a0a0a;
 }
 [data-theme="light"] .logo-word-grad {
-  color: var(--text-3);
+  color: #6b7280;
+  -webkit-text-fill-color: #6b7280;
+  background: none;
 }
 
 /* Nav */
@@ -859,6 +882,91 @@ em {
 .readiness-desc { font-size: 0.84rem; color: var(--text-2); line-height: 1.7; }
 
 /* =========================================
+   SECTION — FAQ (accordion-05 style)
+   ========================================= */
+.section-faq { padding: 120px 0; background: var(--bg); }
+
+.faq-root { width: 100%; margin-top: 56px; }
+
+/* Items — border between each */
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-item:first-child { border-top: 1px solid var(--border); }
+
+/* Trigger — full-width, muted when closed */
+.faq-trigger {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 20px 0 20px 56px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  opacity: 0.2;
+  transition: opacity 0.2s ease;
+  outline: none;
+}
+.faq-trigger:hover { opacity: 0.5; }
+.faq-item[data-state="open"] .faq-trigger { opacity: 1; }
+.faq-trigger:focus-visible {
+  outline: 2px solid var(--text-3);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.faq-trigger-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.faq-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-2);
+  flex-shrink: 0;
+  margin-top: 6px;
+  min-width: 20px;
+}
+
+.faq-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--text);
+}
+
+/* Content — smooth height via CSS grid trick */
+.faq-content-outer {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+.faq-item[data-state="open"] .faq-content-outer {
+  grid-template-rows: 1fr;
+}
+.faq-content-inner {
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.faq-item[data-state="open"] .faq-content-inner {
+  opacity: 1;
+  transition: opacity 0.2s ease 0.05s;
+}
+.faq-content-inner p {
+  padding: 0 0 24px 80px;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-2);
+  line-height: 1.75;
+  max-width: 640px;
+}
+
+/* =========================================
    SECTION — FINAL CTA
    ========================================= */
 .section-cta {
@@ -918,27 +1026,81 @@ em {
   .preview-tasks     { grid-template-columns: 1fr; }
   .preview-readiness-row { flex-direction: column; gap: 12px; align-items: flex-start; }
 }
+
 @media (max-width: 800px) {
+  /* Hero */
   .hero-layout     { grid-template-columns: 1fr; gap: 44px; min-height: unset; padding-bottom: 60px; }
   .hero-visual     { order: 1; }
   .hero            { padding-top: calc(var(--hh) + 40px); }
+
+  /* Why */
   .why-cards       { grid-template-columns: 1fr; gap: 1px; }
+
+  /* How — visuelle Panels verstecken, alle Schritte sichtbar */
+  .how-visual-right      { display: none; }
+  .how-sticky-wrap       { gap: 0; }
+  .how-step              { opacity: 1; }
+  .how-step--active .hs-num { color: var(--text-3); }
+
+  /* Preview */
   .preview-shell   { grid-template-columns: 1fr; }
   .ps-sidebar      { border-right: none; border-bottom: 1px solid var(--border); }
+
+  /* Nav */
   .nav             { display: none; }
   .header-actions .btn { display: none; }
   .menu-toggle     { display: flex; }
 }
+
 @media (max-width: 560px) {
+  /* Spacing */
   .container       { padding: 0 20px; }
-  h1               { font-size: 3rem; }
-  h2               { font-size: 2.2rem; }
+  .section-why, .section-how, .section-compare,
+  .section-faq, .section-preview, .section-cta { padding: 80px 0; }
+
+  /* Typography */
+  h1               { font-size: 2.6rem; }
+  h2               { font-size: 2rem; }
+
+  /* Hero */
   .hero-ctas       { flex-direction: column; width: 100%; }
   .hero-ctas .btn  { width: 100%; justify-content: center; }
-  .section-why, .section-how, .section-preview, .section-cta { padding: 100px 0; }
+  .hero-trust      { font-size: 0.75rem; }
+
+  /* How — Schritte kompakter */
+  .hs-num          { font-size: 1.3rem; min-width: 24px; }
+  .hs-text h3      { font-size: 1rem; }
+  .how-cta         { width: 100%; justify-content: center; }
+
+  /* Preview */
   .preview-hero    { padding: 28px 24px; }
   .preview-split, .preview-readiness { padding: 22px 24px; }
   .preview-task-col { padding: 18px 20px; }
-  .footer-inner    { flex-direction: column; align-items: flex-start; }
+
+  /* FAQ — kleinerer Titel, weniger Einrückung */
+  .faq-trigger     { padding-left: 20px; }
+  .faq-title       { font-size: 1.75rem; }
+  .faq-content-inner p { padding-left: 36px; padding-right: 0; }
+
+  /* Footer */
+  .footer-inner    { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .footer-links    { flex-direction: column; gap: 12px; }
   .footer-copy     { text-align: left; }
+}
+
+@media (max-width: 480px) {
+  /* Comparison table — nur RoleShift-Spalte anzeigen */
+  .ct-head-row     { grid-template-columns: 1fr 1.4fr; }
+  .ct-grid-row     { grid-template-columns: 1fr 1.4fr; }
+  .ct-col-head:not(.is-rs)  { display: none; }
+  .ct-cell:not(.is-rs)      { display: none; }
+  .ct-feat-cell    { grid-column: auto; border-bottom: none;
+                     border-right: 1px solid var(--border); padding: 14px 16px; }
+  .ct-feat-sub     { display: none; }
+  .ct-cell.is-rs   { padding: 14px 16px; }
+  .ct-head-empty   { display: none; }
+
+  /* FAQ — noch kleiner */
+  .faq-title       { font-size: 1.4rem; }
+  .faq-num         { margin-top: 4px; }
 }

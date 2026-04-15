@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <style>
+    .sq  { fill: #ffffff; }
+    .fsq { fill: #ffffff; stroke: #06141B; stroke-width: 2; }
+    @media (prefers-color-scheme: light) {
+      .sq  { fill: #0a0a0a; }
+      .fsq { fill: #0a0a0a; stroke: #E4E9E8; stroke-width: 2; }
+    }
+  </style>
+  <!-- Hinteres Quadrat -->
+  <rect class="sq"  x="1"  y="11" width="25" height="25" rx="5.5"/>
+  <!-- Vorderes Quadrat mit Stroke als sichtbare Trennlinie -->
+  <rect class="fsq" x="14" y="4"  width="25" height="25" rx="5.5"/>
+</svg>
