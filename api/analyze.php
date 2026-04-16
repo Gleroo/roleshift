@@ -63,11 +63,17 @@ if (!$apiKey || $apiKey === 'DEIN_API_KEY_HIER') {
     exit;
 }
 
-$payload = [
+$basePayload = [
     'systemInstruction' => $body['systemInstruction'] ?? new stdClass(),
     'contents'          => $body['contents']          ?? [],
     'generationConfig'  => $body['generationConfig']  ?? ['maxOutputTokens' => 3200, 'temperature' => 0.4]
 ];
+
+// Google Search Grounding: Gemini searches the live web before responding.
+// Only supported by gemini-2.0-flash and newer — incompatible with responseMimeType JSON.
+$payloadWithSearch = array_merge($basePayload, [
+    'tools' => [['googleSearch' => new stdClass()]]
+]);
 
 $markdown  = null;
 $lastError = 'No models tried';
@@ -75,13 +81,15 @@ $lastError = 'No models tried';
 foreach ($models as $model) {
     $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
+    $payload = ($model === 'gemini-2.0-flash') ? $payloadWithSearch : $basePayload;
+
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_TIMEOUT        => 45,
     ]);
 
     $result   = curl_exec($ch);

@@ -52,19 +52,31 @@ $userPrompt        = buildUserPrompt($roleConfig);
 // Try models in order; use responseMimeType to force JSON output
 $models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
 
-$payload = [
+$baseContent = [
     'systemInstruction' => [
         'parts' => [['text' => $systemInstruction]]
     ],
     'contents' => [
         ['parts' => [['text' => $userPrompt]]]
     ],
+];
+
+// gemini-2.0-flash: use Google Search Grounding for live web data.
+// Search Grounding is incompatible with responseMimeType=json, so we rely on
+// the existing tryParseJson() to extract JSON from the text response.
+$payloadWithSearch = array_merge($baseContent, [
+    'generationConfig' => ['maxOutputTokens' => 4096, 'temperature' => 0.4],
+    'tools'            => [['googleSearch' => new stdClass()]],
+]);
+
+// Fallback models: no search grounding, force JSON via responseMimeType.
+$payloadJson = array_merge($baseContent, [
     'generationConfig' => [
         'maxOutputTokens'  => 4096,
         'temperature'      => 0.4,
-        'responseMimeType' => 'application/json',   // Force JSON output
-    ]
-];
+        'responseMimeType' => 'application/json',
+    ],
+]);
 
 $resultJson = null;
 $lastError  = 'Kein Modell versucht';
@@ -72,13 +84,15 @@ $lastError  = 'Kein Modell versucht';
 foreach ($models as $model) {
     $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
+    $payload = ($model === 'gemini-2.0-flash') ? $payloadWithSearch : $payloadJson;
+
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 50,
+        CURLOPT_TIMEOUT        => 60,
     ]);
 
     $raw      = curl_exec($ch);
