@@ -1505,6 +1505,83 @@ const CATEGORY_PHASES = {
   },
 };
 
+// --- ROLLENSPEZIFISCHE RISIKEN & LEITPLANKEN ---------------------------------
+
+const CATEGORY_RISKS = {
+  support: [
+    'Kunden erkennen KI-generierte Antworten — bei sensiblen Themen und Beschwerden immer menschlichen Agenten einsetzen, nie vollständig automatisieren.',
+    'Qualitätsverlust bei zu hoher Automatisierungsrate: Regelmäßige Stichproben-Reviews von KI-Antworten einrichten, Qualitätsschwelle definieren.',
+    'Datenschutz: Kundendaten und Gesprächsinhalte dürfen nicht ungefiltert in öffentliche KI-Tools eingegeben werden — DSGVO-konforme Lösung wählen.',
+    'Team-Akzeptanz: KI darf nicht als Job-Bedrohung wahrgenommen werden — Kommunikation auf Entlastung fokussieren, nicht auf Ersatz.',
+  ],
+  finance: [
+    'KI-generierte Finanzberichte können Fehler enthalten: Klare Freigabe-Checkliste für jeden Report vor Weitergabe an Stakeholder einführen.',
+    'Compliance-Risiko: Regulatorisch relevante Dokumente müssen immer durch qualifizierte Fachkraft geprüft und abgezeichnet werden.',
+    'Datensicherheit: Finanz- und Buchhaltungsdaten sind besonders schützenswert — nur geprüfte, DSGVO-konforme Tools mit Datenverschlüsselung einsetzen.',
+    'Modell-Halluzinationen: KI kann plausibel klingende, aber falsche Zahlen produzieren — Vier-Augen-Prinzip für alle KI-generierten Zahlen ist Pflicht.',
+  ],
+  hr: [
+    'Datenschutz: Personaldaten und Mitarbeiterinformationen dürfen nicht in öffentliche KI-Modelle eingegeben werden — nur DSGVO-konforme HR-Systeme nutzen.',
+    'Bias im Recruiting: KI-Screening-Empfehlungen können systematische Vorurteile verstärken — regelmäßige Fairness-Prüfung und menschliche Kontrolle ist Pflicht.',
+    'Sensible HR-Situationen niemals automatisieren: Trennungsgespräche, Disziplinarmaßnahmen und Ermittlungen erfordern immer persönliche Führung.',
+    'Mitarbeitervertrauen: KI im HR-Bereich kann als Überwachung wahrgenommen werden — transparente Kommunikation über Einsatzbereich und Grenzen ist essenziell.',
+  ],
+  marketing: [
+    'Markenstimme und Qualität: KI-Texte können generisch oder fehlerhaft sein — jeder Inhalt erfordert redaktionelle Prüfung vor Veröffentlichung.',
+    'Urheberrecht: KI-generierte Bilder und Texte können urheberrechtlich problematisch sein — rechtliche Lage für den jeweiligen Use Case klären.',
+    'Überproduktion: KI ermöglicht mehr Content, nicht unbedingt besseren — strategische Priorisierung wichtiger als schiere Volumensteigerung.',
+    'Datenschutz bei Personalisierung: Kundendaten für KI-Personalisierung müssen DSGVO-konform verarbeitet werden — keine ungefilterte Weitergabe an externe KI-Dienste.',
+  ],
+  operations: [
+    'Automatisierung auf undokumentierten Prozessen scheitert: Erst Prozesse klar dokumentieren, dann automatisieren — Reihenfolge ist entscheidend.',
+    'Systemabhängigkeit: Wenn KI-Tools ausfallen, müssen manuelle Fallback-Prozesse bekannt und einsatzbereit sein.',
+    'Schnittstellen-Risiko: KI-Tools müssen zuverlässig mit bestehenden ERP- und Workflow-Systemen integriert werden — technische Abhängigkeiten prüfen.',
+    'Change-Resistenz im Team: Operations-Mitarbeiter brauchen frühe Einbindung und klare Kommunikation über den Mehrwert — sonst sinkt Akzeptanz und Nutzungsqualität.',
+  ],
+  recruiter: [
+    'Diskriminierungsrisiko: KI-Screening kann strukturelle Bias aus historischen Daten reproduzieren — alle Empfehlungen auf Fairness überprüfen.',
+    'Kandidatenerlebnis: Zu viel KI-Automatisierung im Recruiting wirkt unpersönlich — kritische Touchpoints (Absagen, Angebote) immer persönlich gestalten.',
+    'Datenschutz: Bewerberdaten sind besonders sensibel — nur DSGVO-konforme ATS-Systeme mit klarer Datenlösch-Policy einsetzen.',
+    'Fehleinstellungen durch Übervertrauen in KI: KI-Scores sind Hinweise, keine Entscheidungen — finale Einstellung immer menschlich verantworten.',
+  ],
+  education: [
+    'Datenschutz ist nicht verhandelbar: Schüler- und Elterndaten dürfen niemals in öffentliche KI-Tools eingegeben werden — DSGVO und Schulrecht sind bindend.',
+    'Pädagogische Qualität: KI-Materialien müssen auf Altersgemäßheit, Lehrplantreue und pädagogische Eignung geprüft werden — nicht blind übernehmen.',
+    'Vorbildfunktion: Lehrkräfte müssen kritischen KI-Umgang vorleben und Schüler für KI-Fehler und -Grenzen sensibilisieren.',
+    'Abhängigkeitsgefahr: Wenn KI-Tools die Vorbereitung übernehmen, können pädagogische Kernkompetenzen verkümmern — bewusste Balance halten.',
+  ],
+  healthcare: [
+    'Patientensicherheit hat absoluten Vorrang: Jede klinische KI-Empfehlung muss durch qualifiziertes Fachpersonal validiert werden — kein Automatismus bei medizinischen Entscheidungen.',
+    'Schweigepflicht und DSGVO: Patientendaten unterliegen strengstem Datenschutz — ausschließlich zertifizierte, gehostete Medizin-KI-Systeme einsetzen.',
+    'Haftungsklarheit: KI-unterstützte Dokumentation und Entscheidungshilfen entbinden nicht von ärztlicher oder pflegerischer Haftung — Verantwortung bleibt beim Fachpersonal.',
+    'Fehlerkaskaden: Ein KI-Fehler in der Medikationsempfehlung oder Dokumentation kann schwere Folgen haben — Vier-Augen-Prinzip bei klinisch relevanten Outputs.',
+  ],
+  legal: [
+    'Anwaltliche Sorgfaltspflicht: KI-generierte Entwürfe entbinden nicht von der juristischen Prüfungspflicht — jedes Dokument muss vor Versand oder Unterzeichnung von einem Juristen geprüft werden.',
+    'Verschwiegenheitspflicht: Mandantendaten und Fallinformationen dürfen nicht in öffentliche KI-Dienste eingegeben werden — nur geschlossene, datenschutzkonforme Legal-Tech-Systeme.',
+    'Halluzinations-Risiko: KI kann Urteile und Gesetzestexte erfinden, die nicht existieren — alle Rechtsquellen aus KI-Outputs müssen in Originaldatenbanken verifiziert werden.',
+    'Haftungsrisiko: KI-Fehler in rechtlichen Dokumenten können erhebliche Schäden verursachen — Fehlerverantwortung liegt immer beim Juristen, nie bei der KI.',
+  ],
+  engineering: [
+    'Sicherheitslücken: KI-generierter Code kann Schwachstellen enthalten — Security-Review ist Pflicht, besonders für sicherheitskritische Funktionen.',
+    'IP-Schutz: Unternehmenseigener Code sollte nicht in öffentliche KI-Modelle eingegeben werden — Nutzungsbedingungen der Tools prüfen, interne Richtlinien festlegen.',
+    'Übervertrauen in KI-Code: KI-Vorschläge sind Startpunkte, kein fertiger Code — kritisches Code-Review bleibt unverzichtbar, nicht optional.',
+    'Technische Schulden: KI kann schnell viel Code produzieren, der schwer wartbar ist — Code-Qualitätsstandards auch für KI-generierten Code durchsetzen.',
+  ],
+  logistics: [
+    'System-Ausfallszenario: Wenn KI-Optimierungssysteme ausfallen, müssen manuelle Prozesse bekannt und einsatzbereit sein — Contingency-Plan ist Pflicht.',
+    'Datenpflege: KI-Optimierung ist nur so gut wie die Eingangsdaten — schlechte Stammdaten (Adressen, Gewichte, Zeiten) führen zu schlechten Ergebnissen.',
+    'Integration: KI-Tools müssen zuverlässig mit ERP, WMS und Carrier-Systemen kommunizieren — technische Integration frühzeitig und gründlich testen.',
+    'Mitarbeiterqualifikation: Lageristen und Disponenten müssen verstehen, wie KI-Empfehlungen entstehen, um Fehler erkennen zu können — Schulung nicht überspringen.',
+  ],
+  sales: [
+    'Kundendatenschutz: Kundendaten, Gesprächsinhalte und Angebotsinformationen sind vertraulich — nur DSGVO-konforme CRM- und Analyse-Tools einsetzen.',
+    'Authentizitätsverlust: Zu automatisierter Outreach wirkt unpersönlich und schadet der Marke — KI-Texte immer personalisieren und prüfen vor dem Versand.',
+    'Überabhängigkeit von KI-Scores: Lead-Scoring ist eine Orientierung, kein Urteil — Vertriebsmitarbeiter müssen eigenes Urteil behalten und einsetzen.',
+    'Fehlprognosen: KI-Pipeline-Forecasts können die Vertriebsplanung verzerren, wenn Eingangsdaten schlecht gepflegt sind — CRM-Datenqualität hat direkte Auswirkung auf Forecast-Genauigkeit.',
+  ],
+};
+
 // --- STRUCTURED RESULT BUILDER -----------------------------------------------
 
 function computeStructuredResult(d) {
@@ -1555,7 +1632,7 @@ function computeStructuredResult(d) {
       later:      (CATEGORY_PHASES[cat] || base.phases).p3,
     },
     recommendedTools:    rawTools.map(t => ({ name: t.name, category: t.category, reason: t.reason || t.use || '', fitForRole: t.fitForRole || '' })),
-    risksAndSafeguards:  base.risks,
+    risksAndSafeguards:  CATEGORY_RISKS[cat] || base.risks,
     managerSummary:      mgrSummary,
     readinessScore:      base.readinessScore,
     readinessDescription: base.readinessDesc,
