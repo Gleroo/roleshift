@@ -81,24 +81,35 @@ $payloadJson = array_merge($baseContent, [
 $resultJson = null;
 $lastError  = 'Kein Modell versucht';
 
-foreach ($models as $model) {
-    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-
-    $payload = ($model === 'gemini-2.0-flash') ? $payloadWithSearch : $payloadJson;
-
+function callGeminiRoleAnalysis(string $url, array $payload, int $timeout = 60): array {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 60,
+        CURLOPT_TIMEOUT        => $timeout,
     ]);
-
-    $raw      = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curlErr  = curl_error($ch);
+    $raw     = curl_exec($ch);
+    $code    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr = curl_error($ch);
     curl_close($ch);
+    return [$raw, $code, $curlErr];
+}
+
+foreach ($models as $model) {
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+
+    if ($model === 'gemini-2.0-flash') {
+        // Try with Search Grounding first; fall back to JSON-mode if not supported
+        [$raw, $httpCode, $curlErr] = callGeminiRoleAnalysis($url, $payloadWithSearch);
+        if (!$curlErr && $httpCode !== 200) {
+            error_log("[RoleShift/role-analysis] Search Grounding failed (HTTP {$httpCode}), retrying without search.");
+            [$raw, $httpCode, $curlErr] = callGeminiRoleAnalysis($url, $payloadJson);
+        }
+    } else {
+        [$raw, $httpCode, $curlErr] = callGeminiRoleAnalysis($url, $payloadJson);
+    }
 
     if ($curlErr) {
         error_log("[RoleShift/role-analysis] cURL error for {$model}: {$curlErr}");

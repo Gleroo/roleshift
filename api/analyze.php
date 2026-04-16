@@ -78,23 +78,34 @@ $payloadWithSearch = array_merge($basePayload, [
 $markdown  = null;
 $lastError = 'No models tried';
 
-foreach ($models as $model) {
-    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-
-    $payload = ($model === 'gemini-2.0-flash') ? $payloadWithSearch : $basePayload;
-
+function callGemini(string $url, array $payload, int $timeout = 45): array {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 45,
+        CURLOPT_TIMEOUT        => $timeout,
     ]);
-
     $result   = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+    return [$result, $httpCode];
+}
+
+foreach ($models as $model) {
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+
+    // For gemini-2.0-flash: try with Search Grounding first, fall back without if it fails
+    if ($model === 'gemini-2.0-flash') {
+        [$result, $httpCode] = callGemini($url, $payloadWithSearch);
+        if ($httpCode !== 200) {
+            error_log("[RoleShift] Search Grounding failed (HTTP {$httpCode}), retrying without search.");
+            [$result, $httpCode] = callGemini($url, $basePayload);
+        }
+    } else {
+        [$result, $httpCode] = callGemini($url, $basePayload);
+    }
 
     if ($httpCode === 200) {
         $data = json_decode($result, true);
