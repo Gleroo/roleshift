@@ -111,28 +111,17 @@ document.querySelectorAll('.calc-goal-card').forEach(card => {
 });
 
 // --- GENERATE ----------------------------
-generateBtn?.addEventListener('click', async () => {
+generateBtn?.addEventListener('click', () => {
   state.data.roleTitle = document.getElementById('roleTitle')?.value?.trim() || 'Diese Stelle';
   state.data.roleTasks = document.getElementById('roleTasks')?.value?.trim() || '';
   showLoading();
 
-  // Priority 1: Gemini Markdown analysis (rich, role-specific output)
   try {
-    const markdown = await fetchGeminiMarkdown(state.data);
-    renderMarkdownResult(markdown);
-    return;
+    const result = computeStructuredResult(state.data);
+    renderStructuredResult(result);
   } catch (err) {
-    console.warn('[RoleShift] Gemini nicht erreichbar, lokales Modell wird verwendet:', err.message);
-  }
-
-  // Priority 2: Local rules engine (no API required)
-  try {
-    const result = computeResult(state.data);
-    result._localFallback = true;
-    renderResult(result);
-  } catch (localErr) {
-    console.error('[RoleShift] Lokales Modell Fehler:', localErr);
-    showApiError(localErr.message);
+    console.error('[RoleShift] Analyse-Fehler:', err);
+    showApiError('Die Analyse konnte nicht durchgeführt werden. Bitte versuchen Sie es erneut.');
   }
 });
 
@@ -764,6 +753,7 @@ function computeResult(d) {
     maturity, maturityClass,
     autoP, aiP, humanP, reviewP,
     readinessScore, readinessClass,
+    _flags:           F,
     expertSummary:    buildExpertSummary(d, { autoScore, aiScore, humanScore, riskScore, readiness }, F),
     whyThisModel:     buildWhyThisModel(d, F, maturity, { autoScore, aiScore, humanScore, riskScore }),
     risks:            buildRisks(d, F),
@@ -1039,6 +1029,414 @@ function buildGoalNote(goals, F) {
   };
   if (!goals || goals.length === 0) return '';
   return goals.map(g => notes[g]).filter(Boolean).join(' ');
+}
+
+// =============================================================================
+// LOCAL STRUCTURED ALGORITHM — vollständig ohne API
+// Erkennt Berufskategorie aus dem Rollentitel (Deutsch + Englisch),
+// liefert rollenspezifische Aufgaben, Tools, Risiken und Manager-Summary.
+// =============================================================================
+
+// --- ROLLENERKENNUNG (Deutsch + Englisch) ------------------------------------
+
+const ROLE_KEYWORDS = {
+  support:     ['support', 'kundenservice', 'kundenbetreuer', 'kundendienst', 'helpdesk', 'customer service', 'servicemitarbeiter', 'call center', 'callcenter', 'serviceberater', 'kundencenter', 'kundenbetreuerin'],
+  finance:     ['buchhalter', 'buchhaltung', 'controlling', 'controller', 'finanzanalyst', 'finanzbuchhalter', 'steuerberater', 'treasurer', 'accountant', 'revisor', 'bilanz', 'rechnungswesen', 'finance manager', 'finanzkontrolleur'],
+  hr:          ['personalreferent', 'personalmanager', 'hr manager', 'hr business partner', 'personalwesen', 'human resources', 'personalbetreuung', 'personalentwicklung', 'personalreferentin'],
+  marketing:   ['marketing manager', 'content manager', 'brand manager', 'social media manager', 'marketingmanager', 'werbeleiter', 'pr manager', 'kommunikationsmanager', 'digital marketing', 'marketingleiter'],
+  operations:  ['operations manager', 'betriebsleiter', 'werkleiter', 'prozessmanager', 'qualitätsmanager', 'qualitätssicherung', 'supply chain manager', 'betriebsmanager', 'leiter operations'],
+  recruiter:   ['recruiter', 'talent acquisition', 'personalvermittler', 'headhunter', 'personalberater', 'recruiterin'],
+  education:   ['lehrer', 'lehrerin', 'teacher', 'dozent', 'dozentin', 'trainer', 'ausbilder', 'ausbilderin', 'pädagoge', 'pädagogin', 'schulleiter', 'schulleiterin', 'unterricht', 'lehrbeauftragte'],
+  healthcare:  ['arzt', 'ärztin', 'pfleger', 'pflegerin', 'krankenpfleger', 'krankenschwester', 'nurse', 'therapeut', 'therapeutin', 'apotheker', 'apothekerin', 'sanitäter', 'medizinisch', 'klinik', 'pflegefachkraft'],
+  legal:       ['anwalt', 'anwältin', 'rechtsanwalt', 'jurist', 'juristin', 'notar', 'notarin', 'compliance manager', 'rechtsbeistand', 'syndikus', 'rechtsreferent'],
+  engineering: ['ingenieur', 'ingenieurin', 'engineer', 'entwickler', 'entwicklerin', 'software developer', 'programmierer', 'programmiererin', 'techniker', 'technikerin', 'devops', 'data scientist', 'it-leiter', 'softwareentwickler'],
+  logistics:   ['lagerleiter', 'lagerist', 'logistiker', 'disponent', 'disponentin', 'speditionskaufmann', 'warehouse manager', 'transportleiter', 'logistikleiter'],
+  sales:       ['vertriebsleiter', 'vertriebsmanager', 'account manager', 'außendienstmitarbeiter', 'handelsvertreter', 'kundenberater', 'sales manager', 'verkäufer', 'verkäuferin', 'vertriebsmitarbeiter'],
+};
+
+function detectRoleCategory(roleTitle) {
+  const r = roleTitle.toLowerCase();
+  for (const [cat, kws] of Object.entries(ROLE_KEYWORDS)) {
+    if (kws.some(kw => r.includes(kw))) return cat;
+  }
+  // Breitere Fallbacks
+  if (r.includes('kund'))                              return 'support';
+  if (r.includes('finanz') || r.includes('konto'))    return 'finance';
+  if (r.includes('person') || r.includes(' hr'))      return 'hr';
+  if (r.includes('marke') || r.includes('werbung'))   return 'marketing';
+  if (r.includes('vertriebs') || r.includes('verkauf'))return 'sales';
+  if (r.includes('logistik') || r.includes('lager') || r.includes('transport')) return 'logistics';
+  if (r.includes('schule') || r.includes('bildung') || r.includes('lern'))     return 'education';
+  if (r.includes('gesundheit') || r.includes('medizin'))                        return 'healthcare';
+  if (r.includes('recht') || r.includes('jura') || r.includes('legal'))        return 'legal';
+  if (r.includes('software') || r.includes('code') || r.includes('tech') || r.includes(' it')) return 'engineering';
+  return 'default';
+}
+
+// --- KATEGORIE-DATEN ---------------------------------------------------------
+
+const CATEGORY_DATA = {
+  support: {
+    taskSplit: [
+      { area: 'Erstanfragen & Ticket-Triage',     aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'KI klassifiziert und beantwortet Standardanfragen automatisch.' },
+      { area: 'FAQ & Wissensdatenbank',            aiAssisted: true,  automatable: true,  humanLed: false, humanReview: true,  description: 'KI pflegt und aktualisiert Wissensdatenbankartikel — Freigabe durch Team.' },
+      { area: 'Eskalationen & Beschwerden',        aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'Komplexe Fälle und emotionale Eskalationen bleiben rein menschlich.' },
+      { area: 'Kundenbeziehungspflege',            aiAssisted: false, automatable: false, humanLed: true,  humanReview: false, description: 'Vertrauen und Beziehungsaufbau sind rein menschliche Aufgaben.' },
+      { area: 'Stimmungsanalyse & Reporting',      aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'KI analysiert Stimmung und generiert Berichte automatisch.' },
+    ],
+    tools: [
+      { name: 'Intercom Fin',    category: 'KI-Support-Agent',  reason: 'Bis zu 50% der Standardanfragen werden automatisch und korrekt beantwortet.',                       fitForRole: 'Entlastet das Team von repetitiven Anfragen — mehr Zeit für komplexe Fälle.' },
+      { name: 'Zendesk AI',      category: 'Support-Plattform', reason: 'Automatische Ticket-Triage, Antwortvorschläge und Echtzeit-Stimmungsanalyse.',                       fitForRole: 'Direkte Integration in bestehende Workflows ohne Systemwechsel.' },
+      { name: 'Claude / ChatGPT',category: 'Schreib-KI',        reason: 'Antwortvorlagen, Eskalationszusammenfassungen und Wissensdatenbankartikel schnell entwerfen.',       fitForRole: 'Spart 30–60 Minuten Schreibzeit pro Schicht.' },
+      { name: 'Forethought',     category: 'Lösung-KI',         reason: 'Sagt Ticketkategorie voraus und zeigt sofort relevante Lösungsartikel.',                            fitForRole: 'Reduziert durchschnittliche Bearbeitungszeit signifikant.' },
+      { name: 'Assembled',       category: 'Workforce-Planung', reason: 'KI-gestützte Schichtplanung und Workload-Prognose für Support-Teams.',                               fitForRole: 'Optimiert Personalplanung und reduziert Unter- bzw. Überbesetzung.' },
+    ],
+    managerSummary: F => [
+      'KI kann 30–50% der eingehenden Anfragen autonom lösen — Teamkapazität wird für komplexe Fälle frei',
+      'Eskalationen, Vertrauenssituationen und Ausnahmebehandlung bleiben vollständig menschlich',
+      'Investition: KI-Support-Plattform + 2–4 Wochen Team-Onboarding',
+      F.readinessGap ? 'Erste Priorität: Team-Schulung zu KI-Tools vor dem Einsatz' : 'Team ist bereit für strukturierten KI-Rollout',
+      'Empfohlener Einstieg: Top-3 häufigste Anfragekategorien automatisieren',
+    ],
+  },
+
+  finance: {
+    taskSplit: [
+      { area: 'Berichte & Auswertungen',      aiAssisted: true,  automatable: true,  humanLed: false, humanReview: true,  description: 'KI generiert Standardberichte — Freigabe durch Finanzfachkraft.' },
+      { area: 'Buchungen & Abgleich',         aiAssisted: true,  automatable: true,  humanLed: false, humanReview: true,  description: 'Rechnungsverarbeitung und Kontenabgleich weitgehend automatisierbar.' },
+      { area: 'Prognosen & Planung',          aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI modelliert Szenarien — strategische Interpretation bleibt beim Controller.' },
+      { area: 'Compliance & Prüfung',         aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI unterstützt Prüfvorbereitung — Abzeichnung und Verantwortung immer menschlich.' },
+      { area: 'Stakeholder-Kommunikation',    aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI entwirft Präsentationsunterlagen — Vorstand-Beziehungen bleiben menschlich.' },
+    ],
+    tools: [
+      { name: 'Workiva',         category: 'Berichtswesen',    reason: 'Finanzberichte und regulatorische Meldungen automatisch aufbereiten.',                     fitForRole: 'Spart Stunden pro Berichtszyklus bei gleichbleibender Compliance.' },
+      { name: 'Planful',         category: 'FP&A-KI',          reason: 'KI-gestützte Varianzanalyse, Prognosen und Szenarioplanung.',                             fitForRole: 'Schnellere Reaktion auf Marktveränderungen ohne Mehraufwand.' },
+      { name: 'AppZen',          category: 'Audit-KI',         reason: 'Automatische Rechnungs- und Ausgabenprüfung — kennzeichnet Anomalien vor Kontrolle.',      fitForRole: 'Reduziert manuelle Prüfaufwände und deckt Fehler früher auf.' },
+      { name: 'Claude / ChatGPT',category: 'Schreib-KI',       reason: 'Vorstandskommentare, Varianzberichte und Compliance-Zusammenfassungen entwerfen.',         fitForRole: 'Entwürfe in Minuten statt Stunden — Finanzexperte prüft und verfeinert.' },
+      { name: 'Mosaic',          category: 'Finanz-Analytik',  reason: 'Echtzeit-Dashboards mit automatisierter Datenaggregation.',                               fitForRole: 'Sofortiger KPI-Überblick ohne manuelle Datenaufbereitung.' },
+    ],
+    managerSummary: F => [
+      'Buchungs- und Berichtsaufgaben haben das höchste Automatisierungspotenzial — 40–60% Zeitersparnis realistisch',
+      'Compliance-Abzeichnung und strategische Finanzentscheidungen bleiben vollständig unter menschlicher Kontrolle',
+      'Investition: FP&A-Tool + Integrations-Setup (4–8 Wochen) + Compliance-Review der Workflows',
+      F.complianceHeavy ? 'Regulatorisches Umfeld erfordert dokumentierte Freigabeprozesse für alle KI-Outputs' : 'Compliance-Anforderungen moderat — Standardfreigabeprozesse ausreichend',
+      'Risiko: KI-generierte Finanzberichte brauchen klare Review-Prozesse vor Weitergabe',
+    ],
+  },
+
+  hr: {
+    taskSplit: [
+      { area: 'Stellenbeschreibungen',          aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt Entwürfe — HR-Experte prüft Tonalität, Inklusion und Relevanz.' },
+      { area: 'Bewerbungsscreening',            aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt Zusammenfassungen — finale Vorauswahl immer durch HR-Fachkraft.' },
+      { area: 'Mitarbeiter-FAQ & Richtlinien',  aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'Standardanfragen zu Urlaub und Benefits vollständig automatisierbar.' },
+      { area: 'Sensible Gespräche',             aiAssisted: false, automatable: false, humanLed: true,  humanReview: false, description: 'Leistungsgespräche, Trennungsgespräche und Ermittlungen rein menschlich.' },
+      { area: 'Onboarding & Dokumentation',     aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'Onboarding-Checklisten, Vertragsvorlagen und Begrüßungs-E-Mails automatisierbar.' },
+    ],
+    tools: [
+      { name: 'Workday',         category: 'HR-Plattform',        reason: 'Einstellungs-Workflows, Onboarding und Mitarbeiterlebenszyklusverwaltung.',          fitForRole: 'Zentralisiert HR-Daten und automatisiert Routineaufgaben.' },
+      { name: 'Leena AI',        category: 'HR-Chatbot',           reason: 'Beantwortet Mitarbeiter-FAQ zu HR-Themen ohne HR-Einbindung.',                      fitForRole: 'Reduziert eingehende Anfragen ans HR-Team um 30–50%.' },
+      { name: 'Claude / ChatGPT',category: 'Schreib-KI',           reason: 'Stellenbeschreibungen, Richtliniendokumente und Mitarbeiterkommunikation entwerfen.', fitForRole: 'Qualitativ hochwertige Entwürfe in Minuten — HR verfeinert und gibt frei.' },
+      { name: 'Lattice',         category: 'Performance-Mgmt.',    reason: 'Leistungsbeurteilungen strukturieren und mit KI-Vorlagen unterstützen.',             fitForRole: 'Spart Vorbereitungszeit bei Beurteilungszyklen.' },
+      { name: 'Greenhouse',      category: 'Recruiting-Plattform', reason: 'KI-gestütztes Kandidaten-Screening, Planung und Pipeline-Analytik.',                fitForRole: 'Strukturiert den Recruiting-Prozess und reduziert Koordinationsaufwand.' },
+    ],
+    managerSummary: F => [
+      'HR-Administration (FAQ, Onboarding, Stellenbeschreibungen) hat 50–70% Automatisierungspotenzial',
+      'Sensible Personalentscheidungen, Ermittlungen und Trennungsgespräche bleiben rein menschlich',
+      'KI im Recruiting unterstützt — finale Einstellungsentscheidungen liegen immer beim HR-Fachmann',
+      'Investition: HR-Chatbot + Schreib-KI-Lizenz — ROI innerhalb von 3 Monaten realistisch',
+      'Datenschutz: Mitarbeiterdaten niemals ungefiltert in öffentliche KI-Tools eingeben',
+    ],
+  },
+
+  marketing: {
+    taskSplit: [
+      { area: 'Texterstellung & Varianten',     aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI generiert Entwürfe — Markenstimme und Freigabe bleiben beim Team.' },
+      { area: 'Content-Planung',                aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI schlägt Themen vor — strategische Planung bleibt menschlich.' },
+      { area: 'Performance-Berichte',           aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'KI aggregiert Daten und erstellt Standardberichte automatisch.' },
+      { area: 'Kreative Leitung & Strategie',   aiAssisted: false, automatable: false, humanLed: true,  humanReview: false, description: 'Markenpositionierung und Kampagnenstrategie rein menschlich.' },
+      { area: 'Zielgruppenanalyse',             aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI analysiert Daten — strategische Schlüsse ziehen Menschen.' },
+    ],
+    tools: [
+      { name: 'Jasper AI',       category: 'KI-Texterstellung', reason: 'Anzeigentexte, Kampagnenbriefs und Inhaltsvarianten in Produktionsqualität.',          fitForRole: 'Markenkonsistente Texte in Minuten — für hohe Content-Volumen.' },
+      { name: 'Semrush AI',      category: 'SEO & Content',     reason: 'KI-gestützte Keyword-Recherche, Wettbewerbsanalyse und Content-Briefs.',               fitForRole: 'Spart Stunden bei SEO-Recherche — datenbasierte Empfehlungen.' },
+      { name: 'HubSpot AI',      category: 'CRM & E-Mail',      reason: 'KI-E-Mail-Sequenzen, Kampagnenanalyse und Lead-Scoring.',                             fitForRole: 'Automatisiert Nurturing-Workflows und verbessert Conversion-Tracking.' },
+      { name: 'Midjourney',      category: 'Bild-KI',           reason: 'Kampagnenvisuals und Social-Assets schnell erstellen.',                                fitForRole: 'Reduziert Abhängigkeit von Designressourcen für einfache Bilder.' },
+      { name: 'Zapier',          category: 'Automatisierung',   reason: 'Marketing-Tools verbinden und repetitive Workflows automatisieren.',                   fitForRole: 'Eliminiert manuelle Datentransfers und Content-Distribution-Aufgaben.' },
+    ],
+    managerSummary: F => [
+      'Content-Produktion kann mit KI 3–5× skaliert werden bei gleichem Personalaufwand',
+      'Kreative Gesamtleitung, Markenstrategie und Stakeholder-Freigaben bleiben vollständig menschlich',
+      'Qualitätssicherung: Alle KI-Texte erfordern redaktionelle Prüfung vor Veröffentlichung',
+      'Empfohlener Start: KI-Texterstellung pilotieren für einen Content-Typ (z.B. Social Media)',
+      'ROI: Sichtbar nach 4–8 Wochen durch reduzierten Zeitaufwand pro veröffentlichtem Inhalt',
+    ],
+  },
+
+  operations: {
+    taskSplit: [
+      { area: 'Prozessdokumentation',           aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt SOP-Entwürfe — Freigabe durch Prozessverantwortliche.' },
+      { area: 'Statusberichte & KPIs',          aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'Operative Berichte und KPI-Dashboards automatisch generieren.' },
+      { area: 'Lieferanten- & Partnerbeziehungen', aiAssisted: false, automatable: false, humanLed: true, humanReview: false, description: 'Verhandlungen und strategische Partnerschaften rein menschlich.' },
+      { area: 'Ausnahmebehandlung',             aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI unterstützt Diagnose — Entscheidungen und Maßnahmen bleiben menschlich.' },
+      { area: 'Kapazitäts- & Ressourcenplanung', aiAssisted: true, automatable: false, humanLed: true,  humanReview: false, description: 'KI modelliert Szenarien — strategische Entscheidungen beim Operations-Manager.' },
+    ],
+    tools: [
+      { name: 'Notion AI',        category: 'Wissensmanagement', reason: 'SOP-Dokumentation, Meeting-Zusammenfassungen und Prozesslandkarten generieren.',      fitForRole: 'Hält Prozesswissen aktuell ohne hohen manuellen Aufwand.' },
+      { name: 'Process Street',   category: 'Workflow-KI',       reason: 'KI-strukturierte Checklisten und automatisiertes Workflow-Tracking.',                 fitForRole: 'Standardisiert Abläufe und macht Ausnahmen sichtbar.' },
+      { name: 'Zapier',           category: 'Automatisierung',   reason: 'Operative Tools verbinden und Genehmigungs-Workflows automatisieren.',                fitForRole: 'Eliminiert manuelle Übergaben zwischen Systemen.' },
+      { name: 'Monday.com AI',    category: 'Projektmanagement', reason: 'Automatische Aufgabenzuweisung, Deadline-Tracking und Projektstatusberichte.',        fitForRole: 'Echtzeit-Überblick ohne manuelle Datenpflege.' },
+      { name: 'Claude / ChatGPT', category: 'Schreib-KI',        reason: 'Lieferantenbriefs, Statusberichte und Stakeholder-Kommunikation entwerfen.',         fitForRole: 'Spart Zeit bei schriftlicher Kommunikation und Dokumentation.' },
+    ],
+    managerSummary: F => [
+      'Reporting und Prozessdokumentation sind die größten Automatisierungsgewinne — 40–60% Zeitersparnis',
+      'Lieferantenbeziehungen, Krisenreaktion und strategische Planung bleiben vollständig menschlich',
+      F.processGap ? 'Achtung: Prozesse müssen erst dokumentiert werden, bevor Automatisierung zuverlässig funktioniert' : 'Bestehende Prozessdokumentation ist gute Grundlage für KI-Integration',
+      'KI-Tools können operative Transparenz signifikant verbessern ohne Zusatzaufwand',
+      'Empfohlener Einstieg: Automatisierung von Statusberichten und Meeting-Protokollen',
+    ],
+  },
+
+  recruiter: {
+    taskSplit: [
+      { area: 'Stellenausschreibungen',         aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt Entwürfe — Recruiter prüft Tonalität und Anforderungen.' },
+      { area: 'Kandidaten-Sourcing',            aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI identifiziert Kandidaten — Recruiter bewertet und priorisiert.' },
+      { area: 'Lebenslauf-Screening',           aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt Zusammenfassungen — finale Auswahl immer durch den Recruiter.' },
+      { area: 'Einstellungsentscheidungen',     aiAssisted: false, automatable: false, humanLed: true,  humanReview: false, description: 'Finale Einstellungsempfehlungen und Angebote sind rein menschliche Entscheidungen.' },
+      { area: 'Kandidatenpflege & Beziehungen', aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI unterstützt Outreach — persönliche Beziehungen und Verhandlungen menschlich.' },
+    ],
+    tools: [
+      { name: 'HireEZ',           category: 'Sourcing-KI',       reason: 'KI-gestützte Kandidatensuche auf LinkedIn, GitHub und 30+ Plattformen.',              fitForRole: 'Findet passende Kandidaten schneller und erweitert Sourcing-Radius.' },
+      { name: 'Ashby',            category: 'ATS mit KI',        reason: 'KI-gestütztes Pipeline-Management, Outreach-Automatisierung und Kandidatenanalytik.',  fitForRole: 'Strukturiert Recruiting-Prozess und gibt Pipeline-Überblick in Echtzeit.' },
+      { name: 'Metaview',         category: 'Interview-KI',      reason: 'Vorstellungsgespräche automatisch transkribieren und zusammenfassen.',                  fitForRole: 'Spart Dokumentationszeit und verbessert Entscheidungsqualität.' },
+      { name: 'Claude / ChatGPT', category: 'Schreib-KI',        reason: 'Outreach-Nachrichten, Stellenausschreibungen und Interview-Leitfäden entwerfen.',      fitForRole: 'Personalisierte Nachrichten für jede Zielgruppe in Sekunden.' },
+      { name: 'Eightfold AI',     category: 'Talent-Intelligenz',reason: 'Kandidaten mit Stellen auf Basis von Skills abgleichen — jenseits Keyword-Matching.',  fitForRole: 'Deckt versteckte Talente auf und reduziert Bias im Screening.' },
+    ],
+    managerSummary: F => [
+      'Sourcing und Screening können mit KI 2–4× effizienter werden — mehr Kapazität für Beziehungsaufbau',
+      'Einstellungsentscheidungen, Verhandlungen und Kandidatenerlebnis bleiben rein menschlich',
+      'Wichtig: KI-Screening-Empfehlungen müssen auf Bias geprüft werden — menschliche Kontrolle ist Pflicht',
+      'Investition: ATS mit KI + Sourcing-Tool — ROI typischerweise nach 2–3 Besetzungen sichtbar',
+      'KI im Recruiting reduziert Time-to-Hire ohne Qualitätsverlust bei finalen Entscheidungen',
+    ],
+  },
+
+  education: {
+    taskSplit: [
+      { area: 'Unterrichtsplanung & Materialien', aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt Entwürfe — pädagogische Entscheidung und Klassenanpassung bleibt beim Lehrer.' },
+      { area: 'Bewertung & Korrektur',            aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI unterstützt bei strukturierten Aufgaben — Noten liegen bei der Lehrkraft.' },
+      { area: 'Differenzierung & Förderung',      aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI schlägt Fördermaßnahmen vor — Umsetzung und Begleitung ist menschlich.' },
+      { area: 'Elternkommunikation',              aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI entwirft Standardmitteilungen — sensible Gespräche rein menschlich.' },
+      { area: 'Verwaltungsaufgaben',              aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'Terminplanung, Formulare und Standardberichte weitgehend automatisierbar.' },
+    ],
+    tools: [
+      { name: 'Claude / ChatGPT',  category: 'Schreib-KI',       reason: 'Unterrichtsmaterialien, Arbeitsblätter und Aufgaben schnell und differenziert erstellen.', fitForRole: 'Spart Vorbereitungszeit erheblich bei gleichbleibender Qualität.' },
+      { name: 'Khanmigo',          category: 'KI-Tutor',         reason: 'KI-gestütztes individuelles Lernen und Erklärungen für Schüler.',                         fitForRole: 'Unterstützt Binnendifferenzierung ohne erhöhten Lehreraufwand.' },
+      { name: 'Curipod',           category: 'Unterrichts-KI',   reason: 'KI-generierte interaktive Lektionen, Quizze und Diskussionsimpulse.',                      fitForRole: 'Interaktiven Unterricht schnell aufbauen ohne stundenlange Vorbereitung.' },
+      { name: 'LanguageTool',      category: 'Text-KI',          reason: 'Schüleraufsätze auf Sprachfehler prüfen und Feedback vorschlagen.',                        fitForRole: 'Unterstützt beim Korrekturprozess — schnelles Sprachfeedback für Schüler.' },
+      { name: 'Canva AI',          category: 'Design-KI',        reason: 'Visuell ansprechende Lernmaterialien und Präsentationen erstellen.',                       fitForRole: 'Hochwertige Materialien ohne Designkenntnisse — in Minuten.' },
+    ],
+    managerSummary: F => [
+      'Unterrichtsvorbereitung und administrative Aufgaben bieten 30–50% Zeitersparnis durch KI',
+      'Pädagogisches Urteil, Beziehung zu Schülern und Elterngespräche bleiben vollständig menschlich',
+      'Datenschutz: Schülerdaten dürfen nicht in öffentliche KI-Tools eingegeben werden (DSGVO)',
+      'Empfohlener Einstieg: KI für Materialerstellung — kein Kontakt mit Schülerdaten',
+      'Fortbildungsbedarf: Lehrkräfte brauchen ~4–8 Stunden Einführung in sinnvollen KI-Einsatz',
+    ],
+  },
+
+  healthcare: {
+    taskSplit: [
+      { area: 'Dokumentation & Aufzeichnungen', aiAssisted: true,  automatable: false, humanLed: false, humanReview: true,  description: 'KI unterstützt Pflegedokumentation — klinische Einschätzungen durch Fachpersonal.' },
+      { area: 'Terminplanung & Administration', aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'Terminvergabe, Erinnerungen und Standardverwaltung vollständig automatisierbar.' },
+      { area: 'Patientenkommunikation',         aiAssisted: false, automatable: false, humanLed: true,  humanReview: false, description: 'Empathie, Aufklärung und Vertrauen in der Patienteninteraktion rein menschlich.' },
+      { area: 'Diagnose & Klinische Entscheidungen', aiAssisted: true, automatable: false, humanLed: true, humanReview: true, description: 'KI unterstützt Mustererkennung — Diagnosen bleiben beim Fachpersonal.' },
+      { area: 'Medikamentenverwaltung',         aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI prüft Wechselwirkungen — Verabreichung und Freigabe immer durch Fachpersonal.' },
+    ],
+    tools: [
+      { name: 'Nuance DAX',       category: 'Klinische Dokumentation', reason: 'Arztgespräche automatisch in strukturierte Dokumentation umwandeln.',              fitForRole: 'Spart 30–60 Minuten Dokumentationszeit pro Schicht.' },
+      { name: 'Hyro',             category: 'Patientenkommunikation',  reason: 'KI beantwortet Standardfragen von Patienten (Termine, FAQ) automatisch.',          fitForRole: 'Entlastet Personal von Routineanfragen — mehr Zeit für Patienten.' },
+      { name: 'Doximity',         category: 'Klinische KI',           reason: 'Vernetzung mit Fachkollegen und klinische Entscheidungsunterstützung.',              fitForRole: 'Schneller Austausch mit Spezialisten für komplexe Fälle.' },
+      { name: 'Aidoc',            category: 'Bildgebungs-KI',         reason: 'KI analysiert Bildgebung und kennzeichnet dringende Befunde prioritär.',             fitForRole: 'Unterstützt Priorisierung — Befundung bleibt beim Radiologen.' },
+      { name: 'Claude / ChatGPT', category: 'Schreib-KI',             reason: 'Patientenaufklärungsbögen, interne Berichte und Merkblätter entwerfen.',            fitForRole: 'Spart Schreibzeit — fachliche Prüfung immer durch Fachpersonal.' },
+    ],
+    managerSummary: F => [
+      'Dokumentation und Administration haben das höchste Automatisierungspotenzial — bis zu 60 Min. pro Schicht',
+      'Patienteninteraktion, klinische Entscheidungen und Diagnosen bleiben vollständig menschlich und unterliegen Haftung',
+      'Datenschutz: DSGVO und Schweigepflicht setzen strikte Grenzen — nur zertifizierte Lösungen verwenden',
+      'Empfohlener Einstieg: KI-gestützte Dokumentation — geringes Risiko, hoher Zeitgewinn',
+      'Patientensicherheit hat Vorrang: Jede klinische KI-Empfehlung erfordert menschliche Validierung',
+    ],
+  },
+
+  legal: {
+    taskSplit: [
+      { area: 'Vertragsprüfung & Recherche',    aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI prüft Standardklauseln und recherchiert — Beurteilung immer durch den Juristen.' },
+      { area: 'Dokumentenerstellung',           aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt Entwürfe — juristische Prüfung und Anpassung ist Pflicht.' },
+      { area: 'Mandantenkommunikation',         aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI entwirft Standardkommunikation — sensible Beratungsgespräche rein menschlich.' },
+      { area: 'Rechtliche Beratung',            aiAssisted: false, automatable: false, humanLed: true,  humanReview: false, description: 'Rechtliche Einschätzungen und Haftungsfragen sind rein menschlich.' },
+      { area: 'Administrative Verwaltung',      aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'Fristenverwaltung, Terminplanung und Standardformulare automatisierbar.' },
+    ],
+    tools: [
+      { name: 'Harvey AI',        category: 'Legal-KI',            reason: 'Vertragsanalyse, Recherche und Dokumentenerstellung speziell für den Rechtsbereich.',  fitForRole: 'Spart Stunden bei Standardvertragsarbeit — juristische Prüfung bleibt beim Anwalt.' },
+      { name: 'Clio Duo',         category: 'Kanzlei-Management',  reason: 'KI-gestütztes Kanzlei-Management mit automatischer Zeiterfassung.',                    fitForRole: 'Reduziert administrativen Aufwand und verbessert Rechnungsgenauigkeit.' },
+      { name: 'Lexis AI',         category: 'Legal Research',      reason: 'KI-gestützte Rechtsprechungsrecherche und Fallanalyse.',                              fitForRole: 'Findet relevante Urteile erheblich schneller als manuelle Suche.' },
+      { name: 'Claude / ChatGPT', category: 'Schreib-KI',          reason: 'Erste Vertragsentwürfe, Schriftsatz-Gliederungen und Mandantenschreiben vorbereiten.', fitForRole: 'Entwürfe in Minuten — Jurist prüft, verfeinert und unterzeichnet.' },
+      { name: 'Docusign AI',      category: 'Vertragsverwaltung',  reason: 'Intelligente Vertragsanalyse, Fristenverfolgung und Signierprozess-Automatisierung.',  fitForRole: 'Hält Vertragsfristen im Blick und automatisiert Unterzeichnung.' },
+    ],
+    managerSummary: F => [
+      'Recherche, Vertragsentwürfe und Administration können 30–50% effizienter werden mit KI',
+      'Rechtliche Haftung, Mandantenberatung und Strategie bleiben vollständig beim Juristen',
+      'Berufsrechtliche Pflichten (Verschwiegenheit, Sorgfalt) setzen klare Grenzen für KI-Tool-Nutzung',
+      'Nur DSGVO-konforme Legal-Tech-Lösungen — keine öffentlichen KI-Tools mit Mandantendaten',
+      'Empfohlener Einstieg: KI für Vertragsrecherche und erste Entwürfe — minimales Risiko, hoher Zeitgewinn',
+    ],
+  },
+
+  engineering: {
+    taskSplit: [
+      { area: 'Code-Erstellung & Debugging',    aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI schreibt Entwürfe und findet Bugs — Code-Review und Architektur bleibt beim Entwickler.' },
+      { area: 'Technische Dokumentation',       aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt Dokumentationsentwürfe — technische Korrektheit wird geprüft.' },
+      { area: 'Architektur & Systemdesign',     aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI liefert Vorschläge — Architekturentscheidungen bleiben beim Ingenieur.' },
+      { area: 'Tests & Qualitätssicherung',     aiAssisted: true,  automatable: true,  humanLed: false, humanReview: true,  description: 'Automatisierte Tests und Test-Generierung — Review der Abdeckung durch Entwickler.' },
+      { area: 'Stakeholder-Kommunikation',      aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI hilft bei Anforderungsanalyse — Meetings und Entscheidungen menschlich.' },
+    ],
+    tools: [
+      { name: 'GitHub Copilot',   category: 'KI-Code-Assistent', reason: 'Kontextsensitive Code-Vervollständigung direkt in der IDE.',                            fitForRole: 'Durchschnittlich 30–55% schnelleres Coden bei Routineaufgaben.' },
+      { name: 'Cursor AI',        category: 'KI-Editor',         reason: 'KI-nativer Editor mit Konversations-Interface für Refactoring und Debugging.',           fitForRole: 'Beschleunigt Refactoring und erklärt komplexen Code on-demand.' },
+      { name: 'Claude / ChatGPT', category: 'Technische KI',     reason: 'Architekturanfragen, Debugging-Hilfe und technische Dokumentationsentwürfe.',           fitForRole: 'Immer verfügbarer technischer Sparringspartner.' },
+      { name: 'Tabnine',          category: 'Code-Completion',   reason: 'KI-Code-Vervollständigung mit Fokus auf Datenschutz — Code bleibt auf eigenem Server.', fitForRole: 'Ideal wenn IP-Schutz Code-Weitergabe an externe APIs einschränkt.' },
+      { name: 'Swimm AI',         category: 'Code-Dokumentation',reason: 'Dokumentation automatisch aus Code generieren und bei Änderungen aktualisieren.',        fitForRole: 'Hält technische Dokumentation aktuell ohne manuellen Aufwand.' },
+    ],
+    managerSummary: F => [
+      'Entwickler mit KI-Assistenten sind nachweislich 30–55% produktiver bei Coding-Routineaufgaben',
+      'Systemdesign, Architekturentscheidungen und Code-Review bleiben menschliche Kernkompetenz',
+      'Sicherheitsrisiko: KI-generierter Code kann Schwachstellen enthalten — Code-Review ist Pflicht',
+      'IP-Schutz prüfen: Unternehmens-Code sollte nicht in öffentliche KI-Modelle eingegeben werden',
+      'Empfohlener Einstieg: GitHub Copilot für das gesamte Team — schneller ROI, minimale Einführungshürde',
+    ],
+  },
+
+  logistics: {
+    taskSplit: [
+      { area: 'Tourenplanung & Disposition',    aiAssisted: true,  automatable: true,  humanLed: false, humanReview: true,  description: 'KI optimiert Routen automatisch — Ausnahmen und Kundenwünsche durch Disponenten.' },
+      { area: 'Bestandsverwaltung',             aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'Lagerbestandsprognosen und Nachbestellungen weitgehend automatisierbar.' },
+      { area: 'Lieferantenmanagement',          aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI unterstützt bei Analysen — Verhandlungen und Beziehungen bleiben menschlich.' },
+      { area: 'Qualitätsprüfung',               aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI-Bildanalyse unterstützt — finale Qualitätsentscheidungen durch Fachpersonal.' },
+      { area: 'Ausnahmen & Störungen',          aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI erkennt Abweichungen früh — Ursachenanalyse und Eskalation sind menschlich.' },
+    ],
+    tools: [
+      { name: 'FourKites',        category: 'Supply-Chain-KI',    reason: 'Echtzeit-Sendungsverfolgung und KI-gestützte Lieferzeitprognosen.',                    fitForRole: 'Sofortige Transparenz über Sendungsstatus für Team und Kunden.' },
+      { name: 'Coupa AI',         category: 'Beschaffungs-KI',    reason: 'KI-gestützte Lieferantenanalyse, Ausgabentransparenz und Vertragsoptimierung.',        fitForRole: 'Deckt Einsparpotenziale in der Beschaffung auf.' },
+      { name: 'Zebra AI',         category: 'Warehouse-KI',       reason: 'KI-gestützte Lageroptimierung, Pick-Routen und Bestandsverwaltung.',                   fitForRole: 'Steigert Kommissioniergeschwindigkeit und reduziert Fehlerquote.' },
+      { name: 'Claude / ChatGPT', category: 'Schreib-KI',         reason: 'Lieferantenanfragen, Statusberichte und Störungsmeldungen schnell formulieren.',       fitForRole: 'Spart Zeit bei schriftlicher Kommunikation in der Logistik.' },
+      { name: 'Monday.com AI',    category: 'Projektmanagement',  reason: 'Operative Projekte, Deadlines und Ressourcen automatisch im Blick behalten.',          fitForRole: 'Gibt Logistikmanagern Echtzeit-Überblick ohne manuelle Datenpflege.' },
+    ],
+    managerSummary: F => [
+      'Tourenplanung und Bestandsverwaltung haben das höchste Potenzial — 40–60% effizienter',
+      'Lieferantenverhandlungen, Ausnahmemanagement und Kundenbeziehungen bleiben menschlich',
+      'KI-Echtzeitverfolgung verbessert Kundenkommunikation ohne Mehraufwand',
+      'Integration bestehender ERP- und WMS-Systeme ist kritischer Erfolgsfaktor für KI-Rollout',
+      'Empfohlener Einstieg: Tourenoptimierung und Bestandsprognosen — messbare ROI-Kennzahlen sofort verfügbar',
+    ],
+  },
+
+  sales: {
+    taskSplit: [
+      { area: 'Lead-Recherche & Qualifizierung', aiAssisted: true, automatable: true,  humanLed: false, humanReview: true,  description: 'KI identifiziert und qualifiziert Leads — finale Priorisierung durch Vertriebler.' },
+      { area: 'CRM-Datenpflege',                aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'Gesprächsnotizen, Follow-ups und CRM-Updates automatisch generieren.' },
+      { area: 'Kundengespräche & Verhandlungen', aiAssisted: false, automatable: false, humanLed: true, humanReview: false, description: 'Beziehungsaufbau, Überzeugung und Verhandlungen sind rein menschliche Stärken.' },
+      { area: 'Angebotserstellung',             aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt Angebotsentwürfe — Preisverhandlung und Anpassung bleiben beim Profi.' },
+      { area: 'Pipeline-Prognosen',             aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'KI prognostiziert Abschlusswahrscheinlichkeiten und Pipeline-Wert automatisch.' },
+    ],
+    tools: [
+      { name: 'Salesforce Einstein', category: 'CRM-KI',           reason: 'KI-gestütztes Lead-Scoring, Prognosen und Opportunity-Insights direkt im CRM.',      fitForRole: 'Priorisiert den Arbeitsalltag auf die vielversprechendsten Chancen.' },
+      { name: 'Gong.io',            category: 'Revenue Intelligence',reason: 'KI analysiert Verkaufsgespräche und gibt Coaching-Feedback.',                       fitForRole: 'Verbessert Abschlussraten durch datenbasiertes Coaching.' },
+      { name: 'Apollo.io',          category: 'Sales Intelligence', reason: 'KI-gestützte Lead-Generierung, Datenanreicherung und Outreach-Sequenzierung.',       fitForRole: 'Baut Prospecting-Pipeline automatisch auf.' },
+      { name: 'Claude / ChatGPT',   category: 'Schreib-KI',        reason: 'Personalisierte Outreach-E-Mails, Angebotsbeschreibungen und Follow-ups entwerfen.', fitForRole: 'Hochwertige, personalisierte Kommunikation in Sekunden.' },
+      { name: 'Clari',              category: 'Pipeline-Management',reason: 'KI-gestützte Pipeline-Forecasts und Deal-Risikoanalyse.',                            fitForRole: 'Klarer Blick auf erreichbare Quartalsziele für Vertriebsmanager.' },
+    ],
+    managerSummary: F => [
+      'CRM-Pflege, Lead-Recherche und Angebotsentwürfe können 40–60% automatisiert werden',
+      'Kundengespräche, Verhandlungen und Beziehungsaufbau bleiben der menschliche Wettbewerbsvorteil',
+      'KI-Conversation Intelligence (Gong) verbessert Abschlussraten messbar',
+      'Empfohlener Einstieg: CRM-Datenpflege automatisieren — sofortige Zeitersparnis ohne Risiko',
+      'Datenschutz: Kundendaten sind sensibel — DSGVO-konforme Tools wählen',
+    ],
+  },
+};
+
+// Fallback-Daten für unbekannte Kategorien
+const DEFAULT_TASK_SPLIT = [
+  { area: 'Strukturierte Datenverarbeitung',  aiAssisted: true,  automatable: true,  humanLed: false, humanReview: true,  description: 'Repetitive, regelbasierte Datenaufgaben mit hohem Automatisierungspotenzial.' },
+  { area: 'Berichte & Zusammenfassungen',     aiAssisted: true,  automatable: false, humanLed: true,  humanReview: true,  description: 'KI erstellt Entwürfe — fachliche Prüfung und Freigabe durch Fachkraft.' },
+  { area: 'Stakeholder-Kommunikation',        aiAssisted: true,  automatable: false, humanLed: true,  humanReview: false, description: 'KI entwirft Texte — sensible Themen und persönliche Kommunikation menschlich.' },
+  { area: 'Fachliche Kernentscheidungen',     aiAssisted: false, automatable: false, humanLed: true,  humanReview: false, description: 'Urteilsbasierte Entscheidungen, die Fachwissen erfordern, bleiben beim Menschen.' },
+  { area: 'Koordination & Verwaltung',        aiAssisted: true,  automatable: true,  humanLed: false, humanReview: false, description: 'Terminplanung, Dokumentenverwaltung und Standardprozesse automatisierbar.' },
+];
+
+const DEFAULT_TOOLS = [
+  { name: 'Claude / ChatGPT',  category: 'Schreib-KI',        reason: 'Kommunikation, Berichte und Dokumente entwerfen.',                           fitForRole: 'Spart Schreibzeit und verbessert Konsistenz in der Dokumentation.' },
+  { name: 'Microsoft Copilot', category: 'Produktivitäts-KI', reason: 'KI-Unterstützung direkt in Word, Excel, Outlook und Teams.',                 fitForRole: 'Keine Tool-Umstellung — KI in der gewohnten Office-Umgebung.' },
+  { name: 'Notion AI',         category: 'Wissensmanagement', reason: 'Team-Wissensdatenbanken, SOPs und Prozessdokumentation aufbauen.',            fitForRole: 'Hält Wissen zugänglich und reduziert Informationsverlust.' },
+  { name: 'Otter.ai',          category: 'Meeting-KI',        reason: 'Meetings automatisch transkribieren und Aktionspunkte extrahieren.',          fitForRole: 'Spart Nachbereitungszeit und verbessert Meeting-Follow-up-Qualität.' },
+  { name: 'Zapier',            category: 'Automatisierung',   reason: 'Repetitive Übergabe-Workflows zwischen Tools automatisieren.',                fitForRole: 'Eliminiert manuelle Datentransfers ohne Programmierkenntnisse.' },
+];
+
+// --- STRUCTURED RESULT BUILDER -----------------------------------------------
+
+function computeStructuredResult(d) {
+  const base    = computeResult(d);
+  const cat     = detectRoleCategory(d.roleTitle || '');
+  const role    = d.roleTitle || 'Diese Stelle';
+  const catData = CATEGORY_DATA[cat];
+  const F       = base._flags || {};
+
+  const MODEL_NAMES = {
+    'Foundation-first':                    { name: 'Erst die Grundlage legen',              headline: 'Prozesse dokumentieren bevor KI sinnvoll eingeführt werden kann' },
+    'Human-led with targeted AI support':  { name: 'Menschlich geführt, KI-unterstützt',    headline: 'Menschen entscheiden — KI bereitet vor und entlastet' },
+    'AI-assisted with mandatory review':   { name: 'KI-unterstützt mit Pflichtprüfung',     headline: 'KI beschleunigt — jeder Output wird menschlich freigegeben' },
+    'Repetitive workflow automation':      { name: 'Workflow-Automatisierung',               headline: 'Repetitive Aufgaben automatisieren, Menschen für Wertarbeit freisetzen' },
+    'AI first-draft, human review':        { name: 'KI-Entwurf, menschliche Prüfung',       headline: 'KI liefert Rohstoff — Menschen verfeinern und verantworten' },
+    'AI co-pilot workflow':                { name: 'KI-Copilot Workflow',                    headline: 'Mensch und KI arbeiten gleichberechtigt zusammen' },
+    'Selective AI augmentation':           { name: 'Selektive KI-Augmentierung',             headline: 'Gezielte KI-Unterstützung bei klar definierten Teilaufgaben' },
+    'Human-led with selective AI support': { name: 'Menschlich geleitet, selektiver KI-Einsatz', headline: 'Menschliches Urteil im Zentrum — KI als Effizienzwerkzeug' },
+  };
+
+  const model        = MODEL_NAMES[base.maturity] || { name: base.maturity, headline: 'Analysiertes Kollaborationsmodell' };
+  const rawTools     = catData ? catData.tools : DEFAULT_TOOLS;
+  const mgrSummary   = catData ? catData.managerSummary(F) : [
+    `${role} hat realistisches KI-Augmentierungspotenzial in strukturierten Teilaufgaben`,
+    'Urteilsintensive und beziehungsbasierte Aufgaben bleiben menschlich geführt',
+    base.readinessScore < 50 ? 'Schrittweiser Ansatz empfohlen — mit risikoarmen Pilots starten' : 'Strukturierter Rollout möglich — Team ist ausreichend vorbereitet',
+    'Empfohlener Einstieg: Risikoarme, hochvolumige Aufgabe als Pilot wählen',
+    'Change Management: Team früh einbeziehen und Quick Wins sichtbar machen',
+  ];
+
+  return {
+    roleTitle:                  role,
+    collaborationModelName:     model.name,
+    collaborationModelHeadline: model.headline,
+    collaborationModelSummary:  base.expertSummary,
+    workDistribution: {
+      automatable:    base.autoP,
+      aiAssisted:     base.aiP,
+      humanLed:       base.humanP,
+      reviewRequired: base.reviewP,
+    },
+    taskSplit:             catData ? catData.taskSplit : DEFAULT_TASK_SPLIT,
+    aiResponsibilities:    base.tasks.ai,
+    humanResponsibilities: base.tasks.human,
+    implementationPlan: {
+      next30Days: base.phases.p1,
+      next90Days: base.phases.p2,
+      later:      base.phases.p3,
+    },
+    recommendedTools:    rawTools.map(t => ({ name: t.name, category: t.category, reason: t.reason || t.use || '', fitForRole: t.fitForRole || '' })),
+    risksAndSafeguards:  base.risks,
+    managerSummary:      mgrSummary,
+    readinessScore:      base.readinessScore,
+    readinessDescription: base.readinessDesc,
+  };
 }
 
 // =============================================================================
