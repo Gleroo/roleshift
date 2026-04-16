@@ -1382,6 +1382,129 @@ const DEFAULT_TOOLS = [
   { name: 'Zapier',            category: 'Automatisierung',   reason: 'Repetitive Übergabe-Workflows zwischen Tools automatisieren.',                fitForRole: 'Eliminiert manuelle Datentransfers ohne Programmierkenntnisse.' },
 ];
 
+// --- ROLLENSPEZIFISCHE AUFGABENLISTEN ----------------------------------------
+// Ersetzt die generische buildTasks()-Ausgabe mit konkreten, berufsspezifischen Listen.
+
+const CATEGORY_TASKS = {
+  support: {
+    ai:    ['Erstanfragen und Standardtickets automatisch klassifizieren und beantworten', 'Wissensdatenbank-Artikel und FAQs automatisch erstellen und aktualisieren', 'Kundenstimmung in Echtzeit analysieren und Eskalationen kennzeichnen', 'Schichtpläne und Workload-Verteilung optimieren', 'Gesprächsnotizen nach Interaktionen automatisch zusammenfassen'],
+    human: ['Komplexe Eskalationen und emotionale Kundensituationen lösen', 'Hochwertige Kundenbeziehungen aufbauen und pflegen', 'Richtlinienausnahmen und Grenzfälle entscheiden', 'Team-Coaching und Qualitätskalibrierung durchführen', 'Vertrauenswiederherstellung bei unzufriedenen Kunden'],
+  },
+  finance: {
+    ai:    ['Standardisierte Finanzberichte und Varianzanalysen generieren', 'Rechnungsverarbeitung und Kontenabgleich automatisieren', 'Anomalien und Abweichungen in Finanzdaten erkennen', 'Prognose-Szenarien modellieren und Datenvorbereitung übernehmen', 'Regulatorische Meldungen und Compliance-Dokumentation vorbereiten'],
+    human: ['Compliance-Abzeichnung und Prüfungsverantwortung tragen', 'Strategische Finanzplanung und Szenario-Interpretation leiten', 'Stakeholder-Präsentationen und Vorstandsmaterialien vertreten', 'Regulierungsbehörden-Beziehungen und Prüfer-Kommunikation managen', 'Risikoentscheidungen und Ausnahmegenehmigungen verantworten'],
+  },
+  hr: {
+    ai:    ['Stellenbeschreibungen entwerfen und für verschiedene Kanäle optimieren', 'Vorstellungsgespräche planen und Kandidaten-Screening zusammenfassen', 'Mitarbeiter-FAQ und Richtlinien-Q&A automatisch beantworten', 'Onboarding-Dokumente und Begrüßungsinhalte vorbereiten', 'Lern- und Entwicklungsinhalte recherchieren und zusammenfassen'],
+    human: ['Sensible Mitarbeiterbeziehungen und Ermittlungen führen', 'Kultur- und Wertegespräche mit dem Team gestalten', 'Leistungs- und Disziplinarüberprüfungen verantworten', 'Organisationsdesign-Entscheidungen treffen', 'Komplexe Angebots-Verhandlungen und Mitarbeiterbindung steuern'],
+  },
+  marketing: {
+    ai:    ['Textentwürfe und Kampagnenvarianten für verschiedene Kanäle generieren', 'Social-Media-Inhalte planen, umformatieren und terminieren', 'Performance-Berichte und Kampagnenauswertungen erstellen', 'SEO-Keyword-Recherche und Wettbewerbsanalysen durchführen', 'E-Mail-Sequenzen und Newsletter-Entwürfe erstellen'],
+    human: ['Markenstrategie und kreative Gesamtleitung verantworten', 'Stakeholder-Freigaben und Kampagnengenehmigungen steuern', 'Sensible Botschaften und Krisenkommunikation gestalten', 'Agentur- und Partnerbeziehungen managen', 'Zielgruppen-Insights interpretieren und strategische Schlüsse ziehen'],
+  },
+  operations: {
+    ai:    ['Workflow- und SOP-Dokumentationsentwürfe aus Beschreibungen erstellen', 'Statusberichte und KPI-Dashboards automatisch generieren', 'Lieferantenvergleiche und Ausschreibungsanalysen vorbereiten', 'Meeting-Zusammenfassungen und Aktionspunkte extrahieren', 'Kapazitäts- und Ressourcenplanungs-Daten aggregieren'],
+    human: ['Lieferanten- und Partnerverhandlungen führen und Beziehungen pflegen', 'Operative Krisenreaktion und Eskalationsentscheidungen treffen', 'Strategische Kapazitäts- und Priorisierungsentscheidungen verantworten', 'Change Management und interne Kommunikation steuern', 'Prozessausnahmen und komplexe Grenzfälle behandeln'],
+  },
+  recruiter: {
+    ai:    ['Stellenausschreibungen entwerfen und für Jobbörsen optimieren', 'Kandidaten auf Plattformen identifizieren und erste Zusammenfassungen erstellen', 'Outreach-Sequenzen und Erstkontakt-Nachrichten entwerfen', 'Interviewfragen nach Kompetenzen generieren', 'Pipeline-Statusberichte und Kandidaten-Übersichten erstellen'],
+    human: ['Finale Einstellungsempfehlungen und Angebotsentscheidungen treffen', 'Senior-Verhandlungen und Gehaltsgespräche führen', 'Sensible Absagegespräche und Kandidatenfeedback geben', 'Stakeholder-Abstimmung zu Einstellungskriterien und Anforderungen', 'Langfristige Kandidatenbeziehungen und Talent-Pipeline aufbauen'],
+  },
+  education: {
+    ai:    ['Unterrichtsmaterialien, Arbeitsblätter und Aufgaben schnell entwerfen', 'Differenzierte Fördermaterialien für verschiedene Leistungsniveaus erstellen', 'Standardisierte Eltern-Mitteilungen und Schulinformationen formulieren', 'Unterrichtsideen und Lernziele auf Basis des Lehrplans vorschlagen', 'Administrative Formulare, Berichte und Terminpläne vorbereiten'],
+    human: ['Individuelle Schülerbeobachtung und pädagogische Beurteilung durchführen', 'Elterngespräche und sensible Beratungssituationen führen', 'Noten, Bewertungen und Leistungseinschätzungen verantworten', 'Klassenklima und soziale Dynamiken gestalten und begleiten', 'Pädagogische Kernentscheidungen zur Lernentwicklung treffen'],
+  },
+  healthcare: {
+    ai:    ['Pflegedokumentation und Berichte strukturiert vorbereiten', 'Terminvergabe, Erinnerungen und Patientenadministration automatisieren', 'Medikamenten-Wechselwirkungen prüfen und Hinweise ausgeben', 'Patientenaufklärungsbögen und Informationsmaterialien entwerfen', 'Standardisierte FAQ und Patientenanfragen automatisch beantworten'],
+    human: ['Diagnosen und klinische Entscheidungen verantworten', 'Direkte Patientenversorgung und Pflegemaßnahmen durchführen', 'Empathische Patientenaufklärung und Vertrauensgespräche führen', 'Interdisziplinäre Fallbesprechungen und Behandlungspläne abstimmen', 'Ethische Entscheidungen und kritische Einschätzungen treffen'],
+  },
+  legal: {
+    ai:    ['Vertragsklauseln prüfen und Standardvertrags-Entwürfe erstellen', 'Rechtsprechungsrecherche und Fallanalysen vorbereiten', 'Mandantenkorrespondenz und Standardkommunikation entwerfen', 'Fristenverwaltung und Wiedervorlagen automatisch tracken', 'Schriftsatz-Gliederungen und erste Entwürfe vorbereiten'],
+    human: ['Rechtliche Beurteilungen und Haftungsfragen verantworten', 'Mandantenberatung und strategische Rechtsempfehlungen geben', 'Verhandlungen, Anhörungen und Gerichtsauftritte führen', 'Mandatsbeziehungen aufbauen und langfristig pflegen', 'Berufsrechtliche Sorgfaltspflicht und Verschwiegenheit wahren'],
+  },
+  engineering: {
+    ai:    ['Code-Entwürfe, Funktionen und Unit-Tests generieren', 'Bugs und Fehlerquellen analysieren und Lösungsvorschläge liefern', 'Technische Dokumentation aus bestehendem Code generieren', 'Boilerplate-Code und repetitive Implementierungen übernehmen', 'Code-Qualität prüfen und Refactoring-Vorschläge machen'],
+    human: ['Architektur- und Systemdesign-Entscheidungen verantworten', 'Code-Reviews durchführen und Qualitätsstandards setzen', 'Technische Strategie und Technologieauswahl festlegen', 'Sicherheits- und Datenschutzanforderungen beurteilen', 'Stakeholder-Anforderungen aufnehmen und technisch umsetzen'],
+  },
+  logistics: {
+    ai:    ['Touren und Routen automatisch optimieren', 'Lagerbestände prognostizieren und Nachbestellungen auslösen', 'Sendungsstatus und Lieferzeitprognosen in Echtzeit aktualisieren', 'Lieferantenvergleiche und Ausschreibungsunterlagen vorbereiten', 'Operative Berichte und KPI-Dashboards automatisch erstellen'],
+    human: ['Lieferantenverhandlungen und strategische Einkaufsentscheidungen führen', 'Störungen, Ausnahmen und Krisenlagen lösen', 'Kundenbeziehungen und Reklamationen persönlich bearbeiten', 'Strategische Netzwerk- und Standortentscheidungen treffen', 'Team führen, schulen und Qualitätsstandards sicherstellen'],
+  },
+  sales: {
+    ai:    ['Lead-Recherche und erste Qualifizierung automatisieren', 'CRM-Notizen, Follow-up-E-Mails und Pipeline-Updates generieren', 'Angebotsentwürfe und Produktpräsentationen vorbereiten', 'Pipeline-Prognosen und Abschlusswahrscheinlichkeiten berechnen', 'Outreach-Sequenzen und personalisierte Erstnachrichten entwerfen'],
+    human: ['Kundengespräche, Verhandlungen und Abschlüsse persönlich führen', 'Langfristige Kundenbeziehungen und Account-Management betreuen', 'Strategische Einschätzungen zu Markt und Wettbewerb treffen', 'Komplexe Vertragsverhandlungen und Sonderkonditionen aushandeln', 'Interne Stakeholder für Deals und Ressourcen überzeugen'],
+  },
+  default: {
+    ai:    ['Strukturierte Dateneingabe und -validierung übernehmen', 'Routine-Berichte und Zusammenfassungen generieren', 'Vorlagenbasierte Dokumentenentwürfe erstellen', 'Terminplanung und Koordinationsaufgaben automatisieren', 'Informationsrecherche und -synthese durchführen'],
+    human: ['Urteilsentscheidungen und kontextuelles Denken verantworten', 'Stakeholder- und Beziehungsmanagement führen', 'Compliance- und Ethikentscheidungen treffen', 'Strategische Planung und funktionsübergreifende Koordination übernehmen', 'Verantwortung für Ergebnisse und Qualität tragen'],
+  },
+};
+
+// --- ROLLENSPEZIFISCHE UMSETZUNGSPHASEN -------------------------------------
+
+const CATEGORY_PHASES = {
+  support: {
+    p1: ['Top-3 häufigste Anfragekategorien identifizieren und KI-Antworten pilotieren', 'Qualitätskriterien für automatische Antworten festlegen (was ist akzeptabel, was geht in Review)', 'Team in Nutzung von KI-Schreibhilfe für Antwortvorlagen einführen'],
+    p2: ['KI-Abdeckung auf weitere Ticketkategorien ausweiten basierend auf Pilotqualität', 'Eskalations-Routing automatisieren: KI erkennt, wann Mensch übernehmen muss', 'Wissendatenbank mit KI-Unterstützung systematisch aufbauen und aktualisieren'],
+    p3: ['Stimmungsanalyse in Echtzeit für alle Kanäle einführen', 'KI-gestützte Schichtplanung und Workload-Prognose implementieren', 'Support-KPIs auf neue Arbeitsweise anpassen: Lösungsrate, Eskalationsrate, Teamzufriedenheit'],
+  },
+  finance: {
+    p1: ['Standardisierte Finanzberichte als ersten Automatisierungsbereich pilotieren', 'Rechnungsverarbeitung und Kontenabgleich mit KI-Tool testen', 'Freigabe-Workflow für KI-generierte Reports definieren — wer prüft was'],
+    p2: ['Varianzanalyse und Prognose-Modellierung mit KI-Tool ausweiten', 'Compliance-Prüfprozesse für KI-generierte Dokumente formal festhalten', 'Integration in ERP-System prüfen und Datenschnittstellen einrichten'],
+    p3: ['Echtzeit-KPI-Dashboards vollständig automatisiert betreiben', 'KI-Prognosemodelle für Budget- und Planungszyklen einsetzen', 'Finanzabteilung auf höherwertige Analyse- und Beratungsleistungen fokussieren'],
+  },
+  hr: {
+    p1: ['HR-FAQ-Chatbot für häufigste Mitarbeiteranfragen einrichten', 'Stellenbeschreibungsentwürfe mit KI pilotieren — HR prüft und gibt frei', 'Onboarding-Dokumentation automatisieren (Begrüßung, Checklisten, Erstinformationen)'],
+    p2: ['Bewerbungsscreening-Prozess mit KI-Zusammenfassungen unterstützen', 'Leistungsbeurteilungs-Vorlagen und Beurteilungszyklen mit KI strukturieren', 'Datenschutzkonformer Umgang mit Personaldaten in KI-Tools sicherstellen'],
+    p3: ['Personalentwicklungs-Empfehlungen auf Basis von Kompetenzdaten automatisieren', 'HR-Analytics für Fluktuation, Engagement und Entwicklungsbedarfe einführen', 'HR-Rolle neu ausrichten: weniger Administration, mehr strategische Personalarbeit'],
+  },
+  marketing: {
+    p1: ['KI-Texterstellung für einen Content-Typ pilotieren (z.B. Social-Media-Posts)', 'Redaktionellen Freigabeprozess für KI-Inhalte festlegen', 'Performance-Reporting automatisieren — wöchentliche Berichte ohne manuelle Aufbereitung'],
+    p2: ['KI-Texterstellung auf weitere Formate ausweiten: Newsletter, Anzeigen, Blogartikel', 'SEO-Recherche und Content-Briefing mit KI-Tool systematisieren', 'A/B-Tests für KI-generierte vs. manuell erstellte Texte aufsetzen'],
+    p3: ['Content-Produktion vollständig KI-unterstützt skalieren', 'Personalisierung auf Basis von Kundendaten mit KI automatisieren', 'Marketing-Team auf strategische Kreativarbeit und Kampagnenleitung fokussieren'],
+  },
+  operations: {
+    p1: ['Statusberichte und Meeting-Protokolle als ersten KI-Anwendungsfall einführen', 'SOP-Dokumentation für 2–3 Kernprozesse mit KI-Unterstützung aufbauen', 'Kapazitätsdaten automatisch aggregieren — manuelle Datenpflege reduzieren'],
+    p2: ['Workflow-Automatisierung für Genehmigungsprozesse und Statusupdates einrichten', 'KI-Tool in bestehende Projektmanagement-Software integrieren', 'Prozessausnahmen und Eskalationsmuster mit KI früher erkennen'],
+    p3: ['Vollständiges KPI-Dashboard ohne manuelle Eingaben betreiben', 'Lieferantenbewertungen und Ausschreibungen mit KI-Analyse unterstützen', 'Operations-Rolle auf strategische Prozessgestaltung ausrichten'],
+  },
+  recruiter: {
+    p1: ['KI für Stellenausschreibungsentwürfe einsetzen — Recruiter gibt frei', 'Sourcing-Tool für eine offene Stelle pilotieren', 'Interview-Transkription für strukturierte Gesprächsnotizen einführen'],
+    p2: ['KI-Sourcing auf alle aktiven Stellen ausweiten', 'Kandidaten-Outreach-Sequenzen mit KI automatisieren', 'Bias-Prüfung für KI-Screening-Empfehlungen einrichten — regelmäßige Qualitätskontrolle'],
+    p3: ['Pipeline-Analytik und Forecasting für Personalplanung nutzen', 'Recruiting-Kennzahlen neu definieren: Time-to-Hire, Source Quality, Candidate Experience', 'Recruiter-Fokus auf Beziehungsaufbau, Verhandlungen und strategische Personalplanung'],
+  },
+  education: {
+    p1: ['KI für Materialerstellung einer Unterrichtseinheit testen — keine Schülerdaten verwenden', 'Kollegen über datenschutzkonformen KI-Einsatz informieren (DSGVO-Grenzen)', 'Administrative Aufgaben (Formulare, Terminpläne) mit KI vereinfachen'],
+    p2: ['KI-Materialerstellung systematisch in die Unterrichtsvorbereitung integrieren', 'Differenzierte Materialien für verschiedene Leistungsniveaus mit KI erstellen', 'KI-generierte Lernmaterialien auf pädagogische Qualität prüfen und verfeinern'],
+    p3: ['KI-Nutzung als feste Ressource in der Schulentwicklung verankern', 'Fortbildungsangebote zu KI für das gesamte Kollegium aufbauen', 'Unterrichtszeit durch reduzierten Verwaltungsaufwand für Schülerinteraktion nutzen'],
+  },
+  healthcare: {
+    p1: ['KI-gestützte Dokumentationsunterstützung für einen Bereich pilotieren (z.B. Berichte)', 'Zertifizierte, DSGVO-konforme KI-Tools evaluieren — keine öffentlichen Tools mit Patientendaten', 'Terminverwaltung und Standardanfragen automatisieren'],
+    p2: ['KI-Dokumentation auf weitere Bereiche ausweiten — Zeitersparnis messen', 'Patientenaufklärungsmaterialien und FAQ mit KI-Unterstützung aktuell halten', 'Qualitätssicherungsprozess für KI-unterstützte Dokumentation einrichten'],
+    p3: ['Klinische Entscheidungsunterstützung (nur zertifizierte Systeme) evaluieren', 'Verwaltungszeit nachhaltig reduzieren — gewonnene Zeit für Patientenversorgung nutzen', 'Team regelmäßig zu KI-Risiken und -Grenzen im klinischen Kontext schulen'],
+  },
+  legal: {
+    p1: ['KI für Standardvertragsrecherche und erste Entwürfe testen', 'Fristenverwaltung und Wiedervorlagen automatisieren', 'Mandantenkommunikation für Standardthemen mit KI-Entwürfen beschleunigen'],
+    p2: ['Legal Research Tool für alle relevanten Rechtsbereiche einführen', 'Vertragsprüfungs-Workflow mit KI-Unterstützung systematisieren', 'Qualitätssicherungsprozess: Jurist prüft jeden KI-Entwurf vor Versand oder Unterzeichnung'],
+    p3: ['Kanzlei-Wissensmanagement mit KI strukturieren und durchsuchbar machen', 'Abrechnung und Zeiterfassung vollständig automatisieren', 'Juristenkapazität auf komplexe Mandate und strategische Beratung ausrichten'],
+  },
+  engineering: {
+    p1: ['GitHub Copilot oder vergleichbaren KI-Assistenten für das Team einführen', 'Code-Review-Prozess für KI-generierten Code festlegen — Sicherheitscheck einbauen', 'KI für Dokumentationserstellung bei einem Modul oder Projekt pilotieren'],
+    p2: ['KI-Codegenerierung für alle Routineentwicklungsaufgaben nutzen', 'Automatisierte Tests mit KI-Unterstützung erweitern — Testabdeckung erhöhen', 'IP-Schutzrichtlinie für KI-Tool-Nutzung mit Unternehmens-Code festlegen'],
+    p3: ['Entwicklungsprozess vollständig auf KI-unterstütztes Arbeiten umstellen', 'KI für Architekturvorschläge und technische Konzepte einsetzen (mit menschlicher Entscheidung)', 'Entwicklerkapazität auf komplexe Problemlösung und Architekturarbeit fokussieren'],
+  },
+  logistics: {
+    p1: ['Tourenoptimierungs-Tool für einen Bereich oder Standort pilotieren', 'Bestandsprognosen für die umsatzstärksten Artikel automatisieren', 'Sendungsverfolgung und Lieferstatus-Updates für Kunden automatisieren'],
+    p2: ['Tourenoptimierung auf alle Bereiche ausweiten — Kosteneinsparung messen', 'Lagerbestandsverwaltung vollständig KI-gestützt betreiben', 'Lieferantenperformance-Berichte automatisch erstellen und auswerten'],
+    p3: ['Predictive-Demand-Planung in ERP-System integrieren', 'Qualitätsprüfung mit KI-Bildanalyse unterstützen', 'Logistik-KPIs neu definieren: Liefertreue, Kosten pro Sendung, Bestandsreichweite'],
+  },
+  sales: {
+    p1: ['CRM-Datenpflege automatisieren — Gesprächsnotizen und Follow-ups KI-generiert', 'Outreach-Sequenzen für Neukunden mit KI pilotieren', 'Pipeline-Prognose-Tool einführen und mit manuellem Forecast vergleichen'],
+    p2: ['Lead-Qualifizierung vollständig KI-gestützt — Vertriebler fokussiert auf qualifizierte Leads', 'Angebotserstellung mit KI-Vorlagen beschleunigen', 'Conversation Intelligence (z.B. Gong) für Gesprächsanalyse einführen'],
+    p3: ['Vertriebssteuerung datenbasiert: KI-Prognosen als Grundlage für Quotenplanung nutzen', 'Personalisierung im Outreach skalieren — jede Nachricht individuell, kein Mehraufwand', 'Vertriebsteam auf Beratung und Beziehungspflege ausrichten, Routine ist KI-Aufgabe'],
+  },
+};
+
 // --- STRUCTURED RESULT BUILDER -----------------------------------------------
 
 function computeStructuredResult(d) {
@@ -1424,12 +1547,12 @@ function computeStructuredResult(d) {
       reviewRequired: base.reviewP,
     },
     taskSplit:             catData ? catData.taskSplit : DEFAULT_TASK_SPLIT,
-    aiResponsibilities:    base.tasks.ai,
-    humanResponsibilities: base.tasks.human,
+    aiResponsibilities:    (CATEGORY_TASKS[cat] || CATEGORY_TASKS.default).ai,
+    humanResponsibilities: (CATEGORY_TASKS[cat] || CATEGORY_TASKS.default).human,
     implementationPlan: {
-      next30Days: base.phases.p1,
-      next90Days: base.phases.p2,
-      later:      base.phases.p3,
+      next30Days: (CATEGORY_PHASES[cat] || base.phases).p1,
+      next90Days: (CATEGORY_PHASES[cat] || base.phases).p2,
+      later:      (CATEGORY_PHASES[cat] || base.phases).p3,
     },
     recommendedTools:    rawTools.map(t => ({ name: t.name, category: t.category, reason: t.reason || t.use || '', fitForRole: t.fitForRole || '' })),
     risksAndSafeguards:  base.risks,
