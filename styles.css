@@ -201,6 +201,9 @@ em {
 [data-theme="light"] .header { background: rgba(228,233,232,.94); }
 .header.scrolled { border-color: var(--border); }
 .header-inner { display: flex; align-items: center; height: 100%; gap: 28px; }
+@media (max-width: 768px) {
+  .header-inner { justify-content: space-between; }
+}
 
 /* Logo */
 .logo { display: flex; align-items: center; gap: 9px; }
@@ -286,6 +289,8 @@ em {
   color: var(--text-2); padding: 14px 0; border-bottom: 1px solid var(--border);
 }
 .mobile-menu .btn { margin-top: 16px; justify-content: center; }
+.mobile-menu .btn-primary { color: var(--bg); }
+[data-theme="light"] .mobile-menu .btn-primary { color: #ffffff; }
 
 /* =========================================
    HERO
