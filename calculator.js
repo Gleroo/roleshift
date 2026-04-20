@@ -605,11 +605,63 @@ function renderManagerSummary(items) {
 </div>`;
 }
 
+function extractRoadmap(md) {
+  const sectionRe = /\n##\s+Umsetzungsplan[^\n]*\n([\s\S]*?)(?=\n##\s|$)/i;
+  const m = md.match(sectionRe);
+  if (!m) return { cleanedMd: md, phases: [] };
+
+  const cleanedMd = md.replace(m[0], '').trim();
+  const body = m[1];
+  const phases = [];
+  const phaseRe = /###\s+([^\n]+)\n([\s\S]*?)(?=###\s|$)/g;
+  let pm;
+  while ((pm = phaseRe.exec(body)) !== null) {
+    const title = pm[1].trim();
+    const items = pm[2].split('\n')
+      .filter(l => /^[-*•]\s/.test(l.trim()))
+      .map(l => l.trim().replace(/^[-*•]\s+/, '').trim())
+      .filter(Boolean);
+    phases.push({ title, items });
+  }
+  return { cleanedMd, phases };
+}
+
+function buildRoadmapHtml(phases) {
+  if (!phases.length) return '';
+  const configs = [
+    { cls: 'rm-phase--30',   num: '01', range: '0 – 30 Tage' },
+    { cls: 'rm-phase--90',   num: '02', range: '30 – 90 Tage' },
+    { cls: 'rm-phase--long', num: '03', range: 'Langfristig' },
+  ];
+  const phasesHtml = phases.map((p, i) => {
+    const cfg = configs[i] || { cls: '', num: `0${i + 1}`, range: '' };
+    const items = p.items.map(it => `<li>${esc(it)}</li>`).join('');
+    return `
+      <div class="rm-phase ${cfg.cls}">
+        <div class="rm-phase-head">
+          <span class="rm-phase-num">${cfg.num}</span>
+          <span class="rm-phase-range">${cfg.range}</span>
+        </div>
+        <div class="rm-phase-title">${esc(p.title)}</div>
+        <ul class="rm-phase-items">${items}</ul>
+      </div>`;
+  }).join('');
+  return `
+    <div class="result-roadmap">
+      <div class="rm-label">Umsetzungsplan</div>
+      <div class="rm-heading">Ihr schrittweiser Integrationsfahrplan</div>
+      <div class="rm-phases">${phasesHtml}</div>
+    </div>`;
+}
+
 function renderMarkdownResult(markdownText) {
   const res = document.getElementById('step-result');
+
+  const { cleanedMd, phases } = extractRoadmap(markdownText);
+
   const rawHtml = typeof marked !== 'undefined'
-    ? marked.parse(markdownText)
-    : markdownText.replace(/\n/g, '<br>');
+    ? marked.parse(cleanedMd)
+    : cleanedMd.replace(/\n/g, '<br>');
   const safeHtml = typeof DOMPurify !== 'undefined'
     ? DOMPurify.sanitize(rawHtml, {
         ALLOWED_TAGS: ['h1','h2','h3','h4','p','br','strong','em','b','i',
@@ -622,7 +674,8 @@ function renderMarkdownResult(markdownText) {
   res.innerHTML = `
 <div class="result-wrap">
   <div class="result-markdown">${safeHtml}</div>
-  <div class="result-footer" style="margin-top:10px">
+  ${buildRoadmapHtml(phases)}
+  <div class="result-footer" style="margin-top:32px">
     <p class="result-disclaimer">Diese Analyse wurde von einem KI-Modell erstellt und dient als Ausgangspunkt für eine fundierte Teamdiskussion — keine Direktive. Menschliches Urteilsvermögen, organisatorischer Kontext und direkter Input der betroffenen Mitarbeitenden sollten stets leiten, wie Stellen neu gestaltet werden.</p>
     <div class="result-actions">
       <button class="btn btn-ghost" id="restartBtn">Weitere Stelle analysieren</button>

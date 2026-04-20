@@ -94,10 +94,12 @@ if (readinessPreview && previewEl) {
 
   const CELL = 40;
   let offsetX = 0, offsetY = 0;
-  let mouseX = -9999, mouseY = -9999;
   let rafId = null;
 
-  // Animate scrolling offset
+  // Detect touch/no-hover devices — use ambient mask animation instead of mouse tracking
+  const isTouchDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+  let maskAngle = 0;
+
   function tick() {
     offsetX = (offsetX + 0.4) % CELL;
     offsetY = (offsetY + 0.4) % CELL;
@@ -105,23 +107,33 @@ if (readinessPreview && previewEl) {
     pBase.setAttribute('y', offsetY);
     pReveal.setAttribute('x', offsetX);
     pReveal.setAttribute('y', offsetY);
+
+    if (isTouchDevice) {
+      maskAngle += 0.006;
+      const cx = 50 + Math.sin(maskAngle) * 24;
+      const cy = 38 + Math.cos(maskAngle * 0.62) * 18;
+      const mask = `radial-gradient(320px circle at ${cx}% ${cy}%, black, transparent)`;
+      reveal.style.webkitMaskImage = mask;
+      reveal.style.maskImage       = mask;
+    }
+
     rafId = requestAnimationFrame(tick);
   }
 
-  // Mouse-following reveal mask
-  hero.addEventListener('mousemove', e => {
-    const rect = hero.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
-    const mask = `radial-gradient(280px circle at ${mouseX}px ${mouseY}px, black, transparent)`;
-    reveal.style.webkitMaskImage = mask;
-    reveal.style.maskImage = mask;
-  }, { passive: true });
+  // Desktop: mouse-following reveal mask
+  if (!isTouchDevice) {
+    hero.addEventListener('mousemove', e => {
+      const rect = hero.getBoundingClientRect();
+      const mask = `radial-gradient(280px circle at ${e.clientX - rect.left}px ${e.clientY - rect.top}px, black, transparent)`;
+      reveal.style.webkitMaskImage = mask;
+      reveal.style.maskImage       = mask;
+    }, { passive: true });
 
-  hero.addEventListener('mouseleave', () => {
-    reveal.style.webkitMaskImage = 'radial-gradient(0px circle at -999px -999px, black, transparent)';
-    reveal.style.maskImage        = 'radial-gradient(0px circle at -999px -999px, black, transparent)';
-  }, { passive: true });
+    hero.addEventListener('mouseleave', () => {
+      reveal.style.webkitMaskImage = 'radial-gradient(0px circle at -999px -999px, black, transparent)';
+      reveal.style.maskImage        = 'radial-gradient(0px circle at -999px -999px, black, transparent)';
+    }, { passive: true });
+  }
 
   // Only run animation when hero is visible
   const gridObs = new IntersectionObserver(entries => {
