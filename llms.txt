@@ -1,0 +1,18 @@
+# RoleShift
+
+> KI-Rollenanalyse: Aufgabenspezifischer KI-Kollaborationsplan in 5 Minuten
+
+RoleShift ist ein kostenloses Tool für Führungskräfte und HR-Teams. Es analysiert jede Stelle auf KI-Potenzial und erstellt einen stellenspezifischen Mensch-KI-Kollaborationsplan — kostenlos, anonym, ohne Registrierung.
+
+## Wichtige Seiten
+
+- https://roleshift.de/ — Startseite
+- https://roleshift.de/calculator.html — KI-Rollenanalyse starten
+
+## Über das Tool
+
+- Zielgruppe: Führungskräfte, HR-Teams, Unternehmen
+- Sprache: Deutsch
+- Kosten: Kostenlos
+- Technologie: Gemini AI
+- Datenschutz: Keine Datenspeicherung, kein Konto erforderlich
