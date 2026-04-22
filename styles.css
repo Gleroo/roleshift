@@ -1150,6 +1150,7 @@ em {
   .nav             { display: none; }
   .header-actions .btn { display: none; }
   .menu-toggle     { display: flex; }
+  .header-actions  { margin-left: auto; }
 }
 
 @media (max-width: 560px) {
