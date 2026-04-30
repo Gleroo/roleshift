@@ -1,0 +1,11 @@
+---
+deployment:
+  remote-root: /
+  exclude:
+    - .git
+    - .github
+    - .deploy-now
+    - node_modules
+    - "*.skill"
+    - "*.zip"
+    - _skill_extracted
