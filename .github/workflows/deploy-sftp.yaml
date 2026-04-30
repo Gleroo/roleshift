@@ -1,0 +1,46 @@
+name: Deploy to IONOS Webspace
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create API config from secret
+        run: |
+          printf '<?php\ndefine("GEMINI_API_KEY", "%s");\ndefine("GEMINI_MODEL", "gemini-2.5-flash");\n' \
+            "${{ secrets.GEMINI_API_KEY }}" > api/roleshift_config.php
+
+      - name: Deploy via SFTP
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+          SFTP_PATH: ${{ secrets.SFTP_PATH }}
+        run: |
+          sudo apt-get install -y lftp -q
+          cat > /tmp/lftp-commands.txt << 'LFTP'
+          set sftp:auto-confirm yes
+          set net:timeout 30
+          set net:max-retries 3
+          set ftp:ssl-allow no
+          LFTP
+          lftp -f /tmp/lftp-commands.txt
+          lftp -c "
+            set sftp:auto-confirm yes;
+            set net:timeout 30;
+            open sftp://$SFTP_USER:$SFTP_PASSWORD@$SFTP_HOST;
+            mirror --reverse --delete --verbose \
+              --exclude=.git/ \
+              --exclude=.github/ \
+              --exclude=.deploy-now/ \
+              --exclude=_skill_extracted/ \
+              --exclude=serve.ps1 \
+              ./ $SFTP_PATH;
+            bye;
+          "
