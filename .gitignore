@@ -3,6 +3,11 @@ roleshift_config.php
 *.env
 .env
 
+# Skill-Entwicklungsdateien
+_skill_extracted/
+*.skill
+*.zip
+
 # OS
 .DS_Store
 Thumbs.db
