@@ -27,6 +27,12 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: Create API config
+        run: |
+          echo "<?php" > api/roleshift_config.php
+          echo "define('GEMINI_API_KEY', '${{ secrets.GEMINI_API_KEY }}');" >> api/roleshift_config.php
+          echo "define('GEMINI_MODEL',   'gemini-2.5-flash');" >> api/roleshift_config.php
+
 # Please do not touch the following action
       - name: Store deployment content
         uses: ionos-deploy-now/artifact-action@v1
