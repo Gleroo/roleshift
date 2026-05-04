@@ -746,32 +746,6 @@ em {
 }
 .hvp-chip--on { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
 
-/* Force light-mode colors in "how" preview panels 1 + 2 */
-.how-vis-panel[data-vis="1"],
-.how-vis-panel[data-vis="2"] {
-  background: #FFFFFF;
-  border-color: rgba(15,23,42,.1);
-  box-shadow: 0 4px 24px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-.how-vis-panel[data-vis="1"] .hvp-label,
-.how-vis-panel[data-vis="2"] .hvp-label {
-  color: #0D9488; background: rgba(13,148,136,.1); border-color: rgba(15,23,42,.16);
-}
-.how-vis-panel[data-vis="1"] .hvp-question,
-.how-vis-panel[data-vis="2"] .hvp-question { color: #0F172A; }
-.how-vis-panel[data-vis="1"] .hvp-field-label,
-.how-vis-panel[data-vis="2"] .hvp-field-label { color: #94A3B8; }
-.how-vis-panel[data-vis="1"] .hvp-input-mock,
-.how-vis-panel[data-vis="2"] .hvp-input-mock {
-  background: #F1F5F9; border-color: rgba(15,23,42,.16); color: #0F172A;
-}
-.how-vis-panel[data-vis="1"] .hvp-chip,
-.how-vis-panel[data-vis="2"] .hvp-chip { border-color: rgba(15,23,42,.16); color: #475569; }
-.how-vis-panel[data-vis="1"] .hvp-chip--on,
-.how-vis-panel[data-vis="2"] .hvp-chip--on { background: #0D9488; border-color: #0D9488; color: #fff; }
-
 /* Scale questions */
 .hvp-sq-block { display: flex; flex-direction: column; }
 .hvp-sq {

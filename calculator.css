@@ -794,8 +794,8 @@
 @media (max-width: 520px) {
   .calc-card { padding: 28px 20px; }
   .sq-opt { font-size: 0.78rem; padding: 12px 4px; }
-  .calc-goal-grid { grid-template-columns: 1fr 1fr; }
-  .calc-goal-card { height: 170px; overflow: hidden; }
+  .calc-goal-grid { grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; }
+  .calc-goal-card { min-height: 150px; }
   .result-tools-grid { grid-template-columns: 1fr; }
   .result-actions { flex-direction: column; }
   .result-actions .btn { width: 100%; justify-content: center; }
