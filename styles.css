@@ -1193,7 +1193,7 @@ em {
 
 @media (max-width: 800px) {
   .hero-layout     { grid-template-columns: 1fr; gap: 44px; min-height: unset; padding-bottom: 60px; }
-  .hero-visual     { order: 1; }
+  .hero-visual     { display: none; }
   .hero            { padding-top: calc(var(--hh) + 40px); }
   .why-cards       { grid-template-columns: 1fr; gap: 1px; }
   [data-theme="light"] .why-cards { gap: 14px; }
