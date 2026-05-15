@@ -4,6 +4,12 @@
 
 .legal-page { background: var(--bg); min-height: 100vh; }
 
+/* Header logo: override white-on-white in light theme (legal pages have no dark hero) */
+[data-theme="light"] body.legal-page .header:not(.scrolled) .logo-icon-sq       { fill: #0a0a0a; }
+[data-theme="light"] body.legal-page .header:not(.scrolled) .logo-icon-front-sq { fill: #0a0a0a; stroke: var(--bg); }
+[data-theme="light"] body.legal-page .header:not(.scrolled) .logo-word           { color: #0a0a0a; }
+[data-theme="light"] body.legal-page .header:not(.scrolled) .logo-word-grad      { color: #0a0a0a; -webkit-text-fill-color: #0a0a0a; }
+
 /* Hero */
 .legal-hero {
   padding: 72px 0 56px;

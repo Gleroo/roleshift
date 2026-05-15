@@ -1,7 +1,8 @@
 # Config mit API-Keys — niemals committen
-roleshift_config.php
-*.env
+api/roleshift_config.php
 .env
+*.env
+!.env.example
 
 # Skill-Entwicklungsdateien
 _skill_extracted/

@@ -11,9 +11,15 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 
-// Config laden (Gemini API-Key)
+// Config laden aus .env im Projektstamm (kein Composer nötig)
+$_envFile = __DIR__ . '/../.env';
+if (file_exists($_envFile)) {
+    $env = parse_ini_file($_envFile);
+    if ($env) { foreach ($env as $k => $v) { putenv("$k=$v"); } }
+}
+// Fallback: alte roleshift_config.php (Rückwärtskompatibilität)
 $_cfgFile = __DIR__ . '/roleshift_config.php';
-if (file_exists($_cfgFile)) { require_once $_cfgFile; }
+if (!getenv('GEMINI_API_KEY') && file_exists($_cfgFile)) { require_once $_cfgFile; }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -37,10 +43,10 @@ echo json_encode(['result' => $result]);
 
 function callGemini(string $prompt): ?string
 {
-    $apiKey = defined('GEMINI_API_KEY') ? GEMINI_API_KEY : null;
+    $apiKey = getenv('GEMINI_API_KEY') ?: (defined('GEMINI_API_KEY') ? GEMINI_API_KEY : null);
     if (!$apiKey || $apiKey === 'HIER_NEUEN_KEY_EINTRAGEN') return null;
 
-    $model = defined('GEMINI_MODEL') ? GEMINI_MODEL : 'gemini-2.5-flash';
+    $model = getenv('GEMINI_MODEL') ?: (defined('GEMINI_MODEL') ? GEMINI_MODEL : 'gemini-2.5-flash');
     $url   = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
     $payload = json_encode([
@@ -68,7 +74,8 @@ function callGemini(string $prompt): ?string
 
 function buildGeminiPrompt(
     string $roleTitle, string $roleCategory,
-    array $taskAnalysis, array $goals
+    array $taskAnalysis, array $goals,
+    int $repScore = 3, int $stdScore = 3, int $judScore = 3, string $roleClass = 'ki-unterstuetzt'
 ): string {
     $tasksJson = json_encode($taskAnalysis, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     $goalsStr  = implode(', ', $goals) ?: 'nicht angegeben';
@@ -80,6 +87,8 @@ Erstelle einen professionellen deutschen Analysebericht auf Basis der folgenden 
 Stelle: {$roleTitle}
 Funktionsbereich: {$roleCategory}
 Ziele: {$goalsStr}
+Rollenprofil (Skala 1–5): Repetitivität={$repScore}, Standardisierung={$stdScore}, Urteilsvermögen={$judScore}
+Gesamtklassifikation der Rolle: {$roleClass}
 
 Analysierte Aufgaben:
 {$tasksJson}
@@ -118,9 +127,10 @@ PROMPT;
 
 function generateTextsWithGemini(
     string $roleTitle, string $roleCategory,
-    array $taskAnalysis, array $goals
+    array $taskAnalysis, array $goals,
+    int $repScore = 3, int $stdScore = 3, int $judScore = 3, string $roleClass = 'ki-unterstuetzt'
 ): array {
-    $prompt = buildGeminiPrompt($roleTitle, $roleCategory, $taskAnalysis, $goals);
+    $prompt = buildGeminiPrompt($roleTitle, $roleCategory, $taskAnalysis, $goals, $repScore, $stdScore, $judScore, $roleClass);
     $raw    = callGemini($prompt);
 
     if ($raw) {
@@ -150,6 +160,15 @@ function generateTextsWithGemini(
    KERN-ANALYSE
    ========================================= */
 
+function classifyRoleGlobal(int $rep, int $std, int $jud): string
+{
+    // rep, std, jud on 1–5 scale (1=low, 5=high)
+    if ($jud >= 4)                          return 'menschlich';
+    if ($rep >= 4 && $std >= 4 && $jud <= 2) return 'automatisierbar';
+    if ($jud === 3 || $std <= 2)            return 'pruefung';
+    return 'ki-unterstuetzt';
+}
+
 function analyzeRole(array $rc): array
 {
     $roleTitle    = clean(trim($rc['roleTitle'] ?? 'Diese Stelle'));
@@ -157,13 +176,26 @@ function analyzeRole(array $rc): array
     $goals        = (array)($rc['goals']  ?? []);
     $roleCategory = detectRoleCategory($roleTitle);
 
+    // Global role assessment (1–5 scale)
+    $ra  = (array)($rc['roleAssessment'] ?? []);
+    $rep = clamp((int)($ra['repetitive']   ?? 3), 1, 5);
+    $std = clamp((int)($ra['standardized'] ?? 3), 1, 5);
+    $jud = clamp((int)($ra['judgment']     ?? 3), 1, 5);
+    $roleClass = classifyRoleGlobal($rep, $std, $jud);
+
+    // Category pool: distribute task categories based on global role profile
+    $categoryPools = [
+        'automatisierbar'  => ['automatisierbar', 'ki-unterstuetzt', 'ki-unterstuetzt'],
+        'ki-unterstuetzt'  => ['ki-unterstuetzt', 'ki-unterstuetzt', 'menschlich'],
+        'pruefung'         => ['ki-unterstuetzt', 'pruefung',        'menschlich'],
+        'menschlich'       => ['ki-unterstuetzt', 'menschlich',      'menschlich'],
+    ];
+    $pool = $categoryPools[$roleClass] ?? $categoryPools['ki-unterstuetzt'];
+
     $taskAnalysis = [];
     foreach ($tasks as $i => $task) {
         $name     = clean(trim($task['name'] ?? 'Aufgabe ' . ($i + 1)));
-        $rep      = clamp((int)($task['repetitive']   ?? 2), 1, 3);
-        $std      = clamp((int)($task['standardized'] ?? 2), 1, 3);
-        $jud      = clamp((int)($task['judgment']     ?? 2), 1, 3);
-        $category = classifyTask($rep, $std, $jud);
+        $category = $pool[$i % count($pool)];
         $tool     = getToolForTask($name, $category, $roleCategory);
 
         $taskAnalysis[] = [
@@ -176,7 +208,11 @@ function analyzeRole(array $rc): array
     }
 
     // Texte via Gemini 2.5 Flash generieren (Fallback: regelbasiert)
-    $texts = generateTextsWithGemini($roleTitle, $roleCategory, $taskAnalysis, $goals);
+    $texts = generateTextsWithGemini($roleTitle, $roleCategory, $taskAnalysis, $goals, $rep, $std, $jud, $roleClass);
+
+    $resultType   = deriveResultType($taskAnalysis);
+    $freeInsights = generateFreeInsights($taskAnalysis, $resultType, $roleCategory);
+    $premiumReport = generatePremiumReport($taskAnalysis, $texts, $resultType, $roleCategory, $roleTitle, $goals);
 
     return [
         'roleTitle'            => $roleTitle,
@@ -185,6 +221,10 @@ function analyzeRole(array $rc): array
         'kollaborationsmodell' => $texts['kollaborationsmodell'],
         'umsetzungsplan'       => $texts['umsetzungsplan'],
         'abschluss'            => $texts['abschluss'],
+        // Freemium-Felder
+        'resultType'           => $resultType,
+        'freeInsights'         => $freeInsights,
+        'premiumReport'        => $premiumReport,
     ];
 }
 
@@ -823,4 +863,225 @@ function clean(string $s): string
 function clamp(int $v, int $min, int $max): int
 {
     return max($min, min($max, $v));
+}
+
+/* =========================================
+   FREEMIUM — ERGEBNISTYP
+   ========================================= */
+
+function deriveResultType(array $taskAnalysis): string
+{
+    $total      = count($taskAnalysis) ?: 1;
+    $autoCount  = count(array_filter($taskAnalysis, fn($t) => $t['category'] === 'automatisierbar'));
+    $humanCount = count(array_filter($taskAnalysis, fn($t) => $t['category'] === 'menschlich'));
+
+    if ($autoCount / $total > 0.5)  return 'automatable';
+    if ($humanCount / $total >= 0.5) return 'human_led';
+    return 'ai_assisted';
+}
+
+/* =========================================
+   FREEMIUM — KOSTENLOSE INSIGHTS (3 Stück)
+   ========================================= */
+
+function generateFreeInsights(array $taskAnalysis, string $resultType, string $roleCategory): array
+{
+    $total      = count($taskAnalysis) ?: 1;
+    $autoCount  = count(array_filter($taskAnalysis, fn($t) => $t['category'] === 'automatisierbar'));
+    $kiCount    = count(array_filter($taskAnalysis, fn($t) => in_array($t['category'], ['ki-unterstuetzt', 'pruefung'])));
+    $humanCount = count(array_filter($taskAnalysis, fn($t) => $t['category'] === 'menschlich'));
+    $insights   = [];
+
+    // Insight 1: Hauptbefund, spezifisch nach Ergebnistyp
+    if ($resultType === 'automatable') {
+        $pct = round($autoCount / $total * 100);
+        $insights[] = "{$pct} % der analysierten Aufgaben erfüllen alle Kriterien für vollständige Automatisierung — ein überdurchschnittlich hohes KI-Potenzial für diese Stelle.";
+    } elseif ($resultType === 'human_led') {
+        $pct = round($humanCount / $total * 100);
+        $insights[] = "{$pct} % der Aufgaben erfordern menschliches Urteil, Empathie oder situatives Handeln. Diese Stelle hat einen starken menschlichen Kern — bewusste Nicht-Automatisierung ist hier eine strategische Entscheidung.";
+    } else {
+        $pct = round($kiCount / $total * 100);
+        $insights[] = "{$pct} % der Aufgaben eignen sich für KI-Unterstützung: KI liefert strukturierte Ausgangspunkte, der Mensch entscheidet und gibt frei. Das ist nachhaltiger als vollständige Automatisierung.";
+    }
+
+    // Insight 2: Konkreteste umsetzbare Aufgabe
+    $firstAutoTask = null;
+    $firstKiTask   = null;
+    foreach ($taskAnalysis as $t) {
+        if ($t['category'] === 'automatisierbar' && !$firstAutoTask) $firstAutoTask = $t;
+        if (in_array($t['category'], ['ki-unterstuetzt', 'pruefung']) && !$firstKiTask) $firstKiTask   = $t;
+    }
+    $actionTask = $firstAutoTask ?? $firstKiTask;
+    if ($actionTask) {
+        $tq = "\u{201E}{$actionTask['taskName']}\u{201C}";
+        if ($actionTask['category'] === 'automatisierbar') {
+            $insights[] = "Der stärkste Quick-Win-Kandidat ist {$tq}: vollständig automatisierbar, sofort umsetzbar — messbare Zeitersparnis ist hier innerhalb der ersten Woche realistisch.";
+        } else {
+            $insights[] = "{$tq} bietet den einfachsten Einstieg für KI-Unterstützung. KI übernimmt vorbereitende Schritte, ohne den menschlichen Entscheidungsanteil zu ersetzen.";
+        }
+    } else {
+        $insights[] = "KI-Einführung entfaltet den größten Nutzen, wenn sie schrittweise und messbar erfolgt: Eine Aufgabe pilotieren, Ergebnisse dokumentieren, dann skalieren.";
+    }
+
+    // Insight 3: Tool-Verfügbarkeit oder strategische Beobachtung
+    $toolableTasks = array_filter($taskAnalysis, fn($t) => !empty($t['toolName']) && $t['category'] !== 'menschlich');
+    $toolableCount = count($toolableTasks);
+
+    if ($toolableCount > 0) {
+        $insights[] = "Für {$toolableCount} von {$total} Aufgaben wurden konkrete KI-Tools identifiziert, die ohne IT-Eigenentwicklung direkt eingesetzt werden können — die technische Hürde ist hier niedrig.";
+    } elseif ($humanCount > 0 && $resultType !== 'human_led') {
+        $humanNames = array_slice(array_column(
+            array_values(array_filter($taskAnalysis, fn($t) => $t['category'] === 'menschlich')),
+            'taskName'), 0, 2);
+        $nameList   = count($humanNames) === 1
+            ? "\u{201E}{$humanNames[0]}\u{201C}"
+            : implode(' und ', array_map(fn($n) => "\u{201E}{$n}\u{201C}", $humanNames));
+        $insights[] = "Aufgaben wie {$nameList} bleiben bewusst menschlich. KI-Integration schafft mehr Kapazität für genau diese Kernkompetenzen — nicht weniger Bedeutung.";
+    } else {
+        $insights[] = "Die Einführungsreihenfolge ist entscheidend: Starten Sie mit der Aufgabe mit dem höchsten Potenzial und geringstem Aufwand. Der Premium-Bericht gibt die konkrete Priorisierung vor.";
+    }
+
+    return $insights;
+}
+
+/* =========================================
+   FREEMIUM — PREMIUM-REPORT (strukturiert)
+   ========================================= */
+
+function generatePremiumReport(
+    array $taskAnalysis, array $texts,
+    string $resultType, string $roleCategory,
+    string $roleTitle, array $goals
+): array {
+    $autoTasks  = array_values(array_filter($taskAnalysis, fn($t) => $t['category'] === 'automatisierbar'));
+    $kiTasks    = array_values(array_filter($taskAnalysis, fn($t) => in_array($t['category'], ['ki-unterstuetzt', 'pruefung'])));
+    $humanTasks = array_values(array_filter($taskAnalysis, fn($t) => $t['category'] === 'menschlich'));
+    $total      = count($taskAnalysis) ?: 1;
+    $shortLabel = getRoleShortLabel($roleCategory);
+
+    $autoPct  = round(count($autoTasks)  / $total * 100);
+    $kiPct    = round(count($kiTasks)    / $total * 100);
+    $humanPct = round(count($humanTasks) / $total * 100);
+
+    // --- Executive Summary ---
+    $execSummary = "Von {$total} analysierten Kernaufgaben sind " . count($autoTasks) . " direkt automatisierbar ({$autoPct} %), " . count($kiTasks) . " KI-unterstützt ({$kiPct} %) und " . count($humanTasks) . " bleiben menschlich ({$humanPct} %). ";
+
+    if ($resultType === 'automatable') {
+        $execSummary .= "Das überdurchschnittliche Automatisierungspotenzial empfiehlt eine strukturierte Einführung in drei Phasen: Quick Wins in Woche 1–2, breite Integration in Monat 1–3, Skalierung und Evaluation ab Monat 4. ";
+        $execSummary .= "Kritische Erfolgsfaktoren: Klare Qualitätsziele vor dem Start, dedizierte Review-Kapazität in der Einführungsphase und ein definierter Eskalationspfad für Ausnahmefälle.";
+    } elseif ($resultType === 'human_led') {
+        $execSummary .= "Diese Stelle hat einen starken menschlichen Kern — bewusste Nicht-Automatisierung ist hier eine strategische Qualitätsentscheidung, keine Unterlassung. ";
+        $execSummary .= "KI entlastet dennoch: Administrative Randaufgaben, Dokumentation und Vorbereitungsarbeiten eignen sich auch bei primär menschlichen Stellen für gezielte KI-Unterstützung.";
+    } else {
+        $execSummary .= "Das KI-Potenzial liegt primär in der Mensch-KI-Kollaboration: KI liefert strukturierte Ausgangspunkte, der {$shortLabel} entscheidet und gibt frei. ";
+        $execSummary .= "Diese Aufgabenteilung ist nachhaltiger als vollständige Automatisierung — sie erhält menschliche Expertise und steigert die Produktivität messbar, ohne Qualitätsrisiken einzugehen.";
+    }
+
+    // --- Task Mapping ---
+    $taskMapping = [];
+    foreach ($taskAnalysis as $idx => $task) {
+        switch ($task['category']) {
+            case 'automatisierbar':
+                $priority  = 5;
+                $aiRole    = "Übernimmt die Aufgabe vollständig: Vorbereitung, Ausführung und Dokumentation laufen automatisiert.";
+                $humanRole = "Review und Qualitätssicherung: Der {$shortLabel} prüft Ausgaben stichprobenartig und greift bei Ausnahmen ein.";
+                break;
+            case 'ki-unterstuetzt':
+            case 'pruefung':
+                $priority  = 3;
+                $aiRole    = "Liefert strukturierte Rohentwürfe, erste Analysen oder aufbereitete Daten als belastbaren Ausgangspunkt.";
+                $humanRole = "Prüft, ergänzt und gibt frei: Inhalt, Ton und finale Qualitätsentscheidung bleiben beim {$shortLabel}.";
+                break;
+            default: // menschlich
+                $priority  = 1;
+                $aiRole    = "Unterstützt peripher: Dokumentation im Nachgang, Hintergrundinformationen, administrative Vorbereitung — die Kernaufgabe bleibt menschlich.";
+                $humanRole = "Trägt die vollständige Verantwortung für Durchführung, Urteil und Ergebnis dieser Aufgabe.";
+        }
+
+        $taskMapping[] = [
+            'taskName'  => $task['taskName'],
+            'category'  => $task['category'],
+            'aiRole'    => $aiRole,
+            'humanRole' => $humanRole,
+            'priority'  => $priority,
+            'toolName'  => $task['toolName'] ?? null,
+        ];
+    }
+
+    // Sortierung: höchste Priorität zuerst
+    usort($taskMapping, fn($a, $b) => $b['priority'] - $a['priority']);
+
+    // --- Risiken ---
+    $risks = generatePremiumRisks($taskAnalysis, $resultType, $roleCategory);
+
+    // --- Nächste Schritte (aus Phase 1 des Umsetzungsplans) ---
+    $nextSteps = $texts['umsetzungsplan']['phase1']['items'] ?? [];
+    if (empty($nextSteps)) {
+        $nextSteps = [
+            "KI-Tool für die Aufgabe mit der höchsten Priorität auswählen und in einer kontrollierten Testphase von zwei Wochen einsetzen.",
+            "Qualitätsstandards und Freigabe-Workflow für KI-Ausgaben definieren — bevor der erste Pilot startet.",
+            "Team über die Pilotphase informieren: Warum diese Aufgabe, welches Ziel, wie wird Erfolg gemessen?",
+            "Nach zwei Wochen: Aufwand und Ergebnis vor und nach KI-Einsatz vergleichen und dokumentieren.",
+            "Entscheidung auf Basis der Pilotdaten treffen: Skalieren, anpassen oder alternative Aufgabe wählen.",
+        ];
+    }
+
+    // --- Entscheidungsleitfaden (nur für human_led) ---
+    $decisionGuide = null;
+    if ($resultType === 'human_led') {
+        $decisionGuide = "Als Führungskraft stehen Sie vor der Frage, wo KI-Unterstützung für die Stelle des {$roleTitle} vertretbar ist. Folgende Prüfpunkte helfen: (1) Ist das Ergebnis dieser Aufgabe standardisierbar? Wenn nein, bleibt sie menschlich. (2) Gibt es administrative Randaufgaben rund um die Kernaufgabe, die KI übernehmen könnte? (3) Definieren Sie bewusst, welche KI-Nutzung Sie als Organisation NICHT zulassen — das schafft Vertrauen beim {$shortLabel}. (4) Setzen Sie klare Grenzen: KI assistiert, der Mensch entscheidet und trägt Verantwortung — das ist kein Kompromiss, sondern das richtige Modell für diese Stelle.";
+    }
+
+    return [
+        'executiveSummary' => $execSummary,
+        'taskMapping'      => $taskMapping,
+        'risks'            => $risks,
+        'nextSteps'        => $nextSteps,
+        'decisionGuide'    => $decisionGuide,
+    ];
+}
+
+function generatePremiumRisks(array $taskAnalysis, string $resultType, string $roleCategory): array
+{
+    $risks      = [];
+    $autoTasks  = array_filter($taskAnalysis, fn($t) => $t['category'] === 'automatisierbar');
+    $kiTasks    = array_filter($taskAnalysis, fn($t) => in_array($t['category'], ['ki-unterstuetzt', 'pruefung']));
+
+    if (!empty($autoTasks)) {
+        $risks[] = [
+            'risk'       => 'Qualitätsverlust bei unzureichender Ausnahmebehandlung',
+            'mitigation' => 'Stichprobenartige Qualitätsprüfung in den ersten 4–6 Wochen nach Einführung. Klare Eskalationspfade definieren, damit der Mensch bei Randfall-Szenarien sofort und ohne Reibungsverlust eingreifen kann.',
+            'severity'   => 'mittel',
+        ];
+    }
+
+    if (in_array($roleCategory, ['hr', 'legal', 'healthcare'])) {
+        $risks[] = [
+            'risk'       => 'Datenschutz- und Compliance-Risiken bei sensiblen Daten',
+            'mitigation' => 'Vor Einführung DSGVO-Konformität aller eingesetzten Tools prüfen. Datenschutzbeauftragten einbinden. Personenbezogene Daten nicht in externe KI-Dienste übertragen — DSGVO-konforme Alternativen bevorzugen.',
+            'severity'   => 'hoch',
+        ];
+    } else {
+        $risks[] = [
+            'risk'       => 'Anbieterabhängigkeit und Wegfall von Kernfunktionen',
+            'mitigation' => 'Datenhaltung und Kernprozesse vom KI-Tool entkoppeln. Exportfunktionen und Datenportabilität sicherstellen. Fallback-Prozesse dokumentieren für den Fall von Tool-Ausfall, Preisänderungen oder Anbieterinsolvenz.',
+            'severity'   => 'niedrig',
+        ];
+    }
+
+    if ($resultType === 'ai_assisted' && !empty($kiTasks)) {
+        $risks[] = [
+            'risk'       => 'Unkritische Übernahme von KI-Ausgaben ohne menschliche Prüfung',
+            'mitigation' => 'Human-in-the-loop als verbindlichen Prozessstandard etablieren: KI-Ausgaben werden immer geprüft, bevor sie in Entscheidungen einfließen. Review-Zeit in Workflow einkalkulieren — sie ist kein Overhead, sondern Qualitätssicherung.',
+            'severity'   => 'mittel',
+        ];
+    }
+
+    $risks[] = [
+        'risk'       => 'Widerstand im Team durch fehlende Einbindung',
+        'mitigation' => 'Betroffene Mitarbeitende frühzeitig einbeziehen und in die Pilotgestaltung einbinden. KI als Entlastung kommunizieren, nicht als Kontrollinstrument. Erste Erfolge sichtbar machen und intern teilen.',
+        'severity'   => 'mittel',
+    ];
+
+    return array_slice($risks, 0, 4);
 }

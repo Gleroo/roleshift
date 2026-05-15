@@ -11,10 +11,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create API config from secret
+      - name: Create .env from secrets
         run: |
-          printf '<?php\ndefine("GEMINI_API_KEY", "%s");\ndefine("GEMINI_MODEL", "gemini-2.5-flash");\n' \
-            "${{ secrets.GEMINI_API_KEY }}" > api/roleshift_config.php
+          printf 'GEMINI_API_KEY=%s\nGEMINI_MODEL=gemini-2.5-flash\n' \
+            "${{ secrets.GEMINI_API_KEY }}" > .env
 
       - name: Deploy via SFTP
         env:

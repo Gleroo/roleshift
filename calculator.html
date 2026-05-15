@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Security -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none';" />
+  <!-- Security: CSP wird ausschließlich über .htaccess gesetzt (frame-ancestors nur per Header gültig) -->
   <meta name="referrer" content="strict-origin-when-cross-origin" />
 
   <!-- Primary Meta -->
@@ -13,7 +12,7 @@
   <meta name="description" content="Welche Aufgaben kann KI übernehmen, welche brauchen Menschen? Analysieren Sie jede Stelle aufgabenspezifisch und erhalten Sie einen konkreten KI-Kollaborationsplan." />
   <meta name="robots" content="index, follow" />
   <meta name="format-detection" content="telephone=no" />
-  <meta name="theme-color" content="#06141B" />
+  <meta name="theme-color" content="#08101F" />
 
   <!-- Canonical & Hreflang -->
   <link rel="canonical" href="https://roleshift.de/calculator.html" />
@@ -47,8 +46,8 @@
   <link rel="preload" href="styles.css" as="style" />
   <link rel="preload" href="calculator.css" as="style" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="calculator.css" />
+  <link rel="stylesheet" href="styles.css?v=8" />
+  <link rel="stylesheet" href="calculator.css?v=14" />
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
@@ -70,18 +69,8 @@
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "RoleShift",
-            "item": "https://roleshift.de/"
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "KI-Rollenanalyse",
-            "item": "https://roleshift.de/calculator.html"
-          }
+          { "@type": "ListItem", "position": 1, "name": "RoleShift", "item": "https://roleshift.de/" },
+          { "@type": "ListItem", "position": 2, "name": "KI-Rollenanalyse", "item": "https://roleshift.de/calculator.html" }
         ]
       }
     ]
@@ -90,7 +79,8 @@
 </head>
 <body class="calc-body">
 
-<header class="calc-header">
+<!-- ===================== HEADER ===================== -->
+<header class="calc-header" role="banner">
   <div class="calc-header-inner">
     <a href="index.html" class="logo" aria-label="RoleShift — Startseite">
       <svg class="logo-icon" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -99,149 +89,168 @@
       </svg>
       <span class="logo-word">Role<span class="logo-word-grad">Shift</span></span>
     </a>
-    <div class="calc-progress-wrap">
-      <div class="calc-progress-track">
-        <div class="calc-progress-fill" id="progressFill"></div>
+
+    <!-- Stepper -->
+    <nav class="calc-stepper" aria-label="Fortschritt" id="stepperNav">
+      <div class="stepper-step active" id="stp-1" aria-current="step">
+        <div class="stepper-circle">1</div>
+        <span class="stepper-label">Stelle</span>
       </div>
-      <span class="calc-progress-label" id="progressLabel">Schritt 1 von 3</span>
-    </div>
-    <button class="theme-toggle" id="themeToggle" aria-label="Dark Mode umschalten">
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    </button>
+      <div class="stepper-line"></div>
+      <div class="stepper-step" id="stp-2">
+        <div class="stepper-circle">2</div>
+        <span class="stepper-label">Bewertung</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="stepper-step" id="stp-3">
+        <div class="stepper-circle">3</div>
+        <span class="stepper-label">Prioritäten</span>
+      </div>
+      <div class="stepper-line"></div>
+      <div class="stepper-step" id="stp-4">
+        <div class="stepper-circle">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg>
+        </div>
+        <span class="stepper-label">Ergebnis</span>
+      </div>
+    </nav>
   </div>
 </header>
 
 <main class="calc-stage" id="calcStage">
   <h1 class="sr-only">KI-Rollenanalyse: Wo passt künstliche Intelligenz in Ihre Stelle?</h1>
 
-  <!-- ① STELLE & AUFGABEN -->
+  <!-- ===================== SCHRITT 1 — STELLE ===================== -->
   <div class="calc-step" id="step-1">
     <div class="calc-card">
-      <div class="calc-eyebrow">Schritt 1 von 3 — Stelle</div>
+      <div class="calc-eyebrow">Schritt 1 von 4 — Stelle</div>
       <h2 class="calc-q">Welche Stelle analysieren Sie?</h2>
       <p class="calc-hint">Geben Sie die Stellenbezeichnung ein und nennen Sie typische Kernaufgaben. Je konkreter Ihre Angaben, desto präziser die Empfehlung.</p>
 
       <div class="calc-field-group">
         <label class="calc-label" for="roleTitle">Stellenbezeichnung</label>
-        <input class="calc-input" id="roleTitle" type="text" placeholder="z.B. Customer Support Specialist" autocomplete="off" />
+        <input class="calc-input calc-input-lg" id="roleTitle" type="text"
+               placeholder="z.B. Customer Support Specialist" autocomplete="off" spellcheck="false" />
         <div class="calc-examples">
-          <span class="calc-ex-label">Häufige Stellen</span>
+          <span class="calc-ex-label">Schnellauswahl</span>
           <div class="calc-chips" id="roleChips">
-            <button class="calc-chip" data-val="HR Manager">HR Manager</button>
-            <button class="calc-chip" data-val="Customer Support Specialist">Support Specialist</button>
-            <button class="calc-chip" data-val="Operations Coordinator">Operations Coordinator</button>
-            <button class="calc-chip" data-val="Finance Analyst">Finance Analyst</button>
-            <button class="calc-chip" data-val="Recruiter">Recruiter</button>
-            <button class="calc-chip" data-val="Marketing Manager">Marketing Manager</button>
+            <button class="calc-chip" type="button" data-val="Finance Analyst">Finance Analyst</button>
+            <button class="calc-chip" type="button" data-val="HR Manager">HR Manager</button>
+            <button class="calc-chip" type="button" data-val="Recruiter">Recruiter</button>
+            <button class="calc-chip" type="button" data-val="Customer Support Specialist">Support Specialist</button>
+            <button class="calc-chip" type="button" data-val="Marketing Manager">Marketing Manager</button>
+            <button class="calc-chip" type="button" data-val="Operations Coordinator">Operations Coordinator</button>
           </div>
         </div>
       </div>
 
       <div class="calc-field-group">
-        <label class="calc-label">Kernaufgaben</label>
-        <p class="calc-hint-sm">Was macht diese Person täglich oder wöchentlich? Eine Aufgabe pro Feld — konkrete Tätigkeiten liefern präzisere Empfehlungen.</p>
+        <label class="calc-label">Kernaufgaben <span class="calc-optional">(optional, verbessert Präzision)</span></label>
+        <p class="calc-hint-sm">Eine Aufgabe pro Feld. Konkrete Tätigkeiten liefern präzisere Empfehlungen.</p>
         <div class="task-list" id="taskList">
           <div class="task-item">
             <span class="task-num">1</span>
             <input class="calc-input task-input" type="text" placeholder="z.B. Monatliche Auswertungen aufbereiten und präsentieren" />
-            <button class="task-remove-btn" aria-label="Aufgabe entfernen" tabindex="-1">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4l8 8M12 4l-8 8"/></svg>
-            </button>
           </div>
           <div class="task-item">
             <span class="task-num">2</span>
             <input class="calc-input task-input" type="text" placeholder="z.B. Wöchentliche Berichte erstellen" />
-            <button class="task-remove-btn" aria-label="Aufgabe entfernen" tabindex="-1">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4l8 8M12 4l-8 8"/></svg>
-            </button>
           </div>
           <div class="task-item">
             <span class="task-num">3</span>
             <input class="calc-input task-input" type="text" placeholder="z.B. Kundengespräche führen und dokumentieren" />
-            <button class="task-remove-btn" aria-label="Aufgabe entfernen" tabindex="-1">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4l8 8M12 4l-8 8"/></svg>
-            </button>
           </div>
         </div>
-        <button class="task-add-btn" id="addTaskBtn" type="button">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
-          Aufgabe hinzufügen
-        </button>
       </div>
 
       <div class="calc-actions">
         <div></div>
-        <button class="btn btn-primary btn-lg" id="step1Next">
-          Aufgaben bewerten <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+        <button class="btn btn-primary btn-lg" id="step1Next" type="button">
+          Weiter
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ② AUFGABEN BEWERTEN (dynamisch) -->
+  <!-- ===================== SCHRITT 2 — BEWERTUNG (dynamisch) ===================== -->
   <div class="calc-step calc-step-hidden" id="step-2">
     <div class="calc-card" id="step2Card">
       <!-- Wird von JS generiert -->
     </div>
   </div>
 
-  <!-- ③ PRIORITÄTEN -->
+  <!-- ===================== SCHRITT 3 — PRIORITÄTEN ===================== -->
   <div class="calc-step calc-step-hidden" id="step-3">
     <div class="calc-card">
-      <div class="calc-eyebrow">Schritt 3 von 3 — Prioritäten</div>
+      <div class="calc-eyebrow">Schritt 3 von 4 — Prioritäten</div>
       <h2 class="calc-q">Was ist das Hauptziel der KI-Einführung?</h2>
       <p class="calc-hint">Das Ziel beeinflusst die Priorisierung im Umsetzungsplan. Mehrere Ziele sind möglich.</p>
 
       <div class="calc-goal-grid" id="goalGrid">
-        <button class="calc-goal-card" data-val="time">
-          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l3 3"/></svg></div>
+        <button class="calc-goal-card" type="button" data-val="time">
+          <div class="cgc-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l3 3"/></svg>
+          </div>
           <div class="cgc-title">Zeit sparen</div>
           <div class="cgc-desc">Routineaufgaben beschleunigen, Kapazität für Wichtigeres schaffen</div>
         </button>
-        <button class="calc-goal-card" data-val="quality">
-          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2l2.4 4.9L18 8l-4 3.9.9 5.5L10 15l-4.9 2.4.9-5.5L2 8l5.6-.1z"/></svg></div>
+        <button class="calc-goal-card" type="button" data-val="quality">
+          <div class="cgc-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2l2.4 4.9L18 8l-4 3.9.9 5.5L10 15l-4.9 2.4.9-5.5L2 8l5.6-.1z"/></svg>
+          </div>
           <div class="cgc-title">Qualität verbessern</div>
           <div class="cgc-desc">Fehler reduzieren, konsistentere Ergebnisse und weniger Variation</div>
         </button>
-        <button class="calc-goal-card" data-val="admin">
-          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="7" y="2" width="6" height="4" rx="1"/></svg></div>
-          <div class="cgc-title">Verwaltungsaufwand reduzieren</div>
+        <button class="calc-goal-card" type="button" data-val="admin">
+          <div class="cgc-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><rect x="7" y="2" width="6" height="4" rx="1"/></svg>
+          </div>
+          <div class="cgc-title">Verwaltung reduzieren</div>
           <div class="cgc-desc">Weniger Dokumentation, E-Mails und Reporting-Aufwand</div>
         </button>
-        <button class="calc-goal-card" data-val="decisions">
-          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3,17 7,13 11,15 17,7"/><circle cx="17" cy="7" r="2"/></svg></div>
+        <button class="calc-goal-card" type="button" data-val="decisions">
+          <div class="cgc-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3,17 7,13 11,15 17,7"/><circle cx="17" cy="7" r="2"/></svg>
+          </div>
           <div class="cgc-title">Entscheidungen verbessern</div>
           <div class="cgc-desc">Bessere Datengrundlagen, schnellere Analysen, klarere Insights</div>
         </button>
-        <button class="calc-goal-card" data-val="focus">
-          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="2.5"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3"/></svg></div>
-          <div class="cgc-title">Mitarbeiterzufriedenheit steigern</div>
+        <button class="calc-goal-card" type="button" data-val="focus">
+          <div class="cgc-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="2.5"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3"/></svg>
+          </div>
+          <div class="cgc-title">Mitarbeiterzufriedenheit</div>
           <div class="cgc-desc">Lästige Aufgaben delegieren, sinnvollere Arbeit ermöglichen</div>
         </button>
-        <button class="calc-goal-card" data-val="human-control">
-          <div class="cgc-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3"/><path d="M4 18c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg></div>
-          <div class="cgc-title">Menschliche Führung sicherstellen</div>
+        <button class="calc-goal-card" type="button" data-val="human-control">
+          <div class="cgc-icon">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3"/><path d="M4 18c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+          </div>
+          <div class="cgc-title">Menschliche Führung</div>
           <div class="cgc-desc">KI assistiert, Menschen entscheiden und tragen Verantwortung</div>
         </button>
       </div>
 
       <div class="calc-actions">
-        <button class="btn btn-ghost calc-back" data-back="2">Zurück</button>
-        <button class="btn btn-primary btn-lg" id="generateBtn" disabled>
-          Analyse generieren <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
+        <button class="btn btn-ghost calc-back" type="button" data-back="2">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 8H3M8 3l-5 5 5 5"/></svg>
+          Zurück
+        </button>
+        <button class="btn btn-primary btn-lg" id="generateBtn" type="button" disabled>
+          Analyse generieren
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M8 3l5 5-5 5"/></svg>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ERGEBNIS -->
+  <!-- ===================== ERGEBNIS ===================== -->
   <div class="calc-step calc-step-hidden" id="step-result"></div>
 
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" crossorigin="anonymous"></script>
-<script src="calculator.js"></script>
+<script src="calculator.js?v=13"></script>
 </body>
 </html>

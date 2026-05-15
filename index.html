@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Security -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none';" />
+  <!-- Security: CSP wird ausschließlich über .htaccess gesetzt (frame-ancestors nur per Header gültig) -->
   <meta name="referrer" content="strict-origin-when-cross-origin" />
 
   <!-- Primary Meta -->
@@ -44,9 +43,9 @@
   <!-- Fonts & Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" href="styles.css" as="style" />
+  <link rel="preload" href="styles.css?v=7" as="style" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 
   <!-- Prefetch calculator for instant navigation -->
   <link rel="prefetch" href="calculator.html" />
@@ -127,15 +126,12 @@
       <span class="logo-word">Role<span class="logo-word-grad">Shift</span></span>
     </a>
     <nav class="nav">
-      <a href="#why">Warum es wichtig ist</a>
-      <a href="#how">So funktioniert es</a>
-      <a href="#preview">Optionen vergleichen</a>
+      <a href="#why">Warum</a>
+      <a href="#how">So geht's</a>
+      <a href="#preview">Vergleich</a>
+      <a href="#faq">Fragen</a>
     </nav>
     <div class="header-actions">
-      <button class="theme-toggle" id="themeToggle" aria-label="Dark Mode umschalten">
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      </button>
       <a href="calculator.html" class="btn btn-primary">Rolle analysieren</a>
     </div>
     <button class="menu-toggle" id="menuToggle" aria-label="Menü">
@@ -143,9 +139,10 @@
     </button>
   </div>
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#why">Warum es wichtig ist</a>
-    <a href="#how">So funktioniert es</a>
-    <a href="#preview">Optionen vergleichen</a>
+    <a href="#why">Warum</a>
+    <a href="#how">So geht's</a>
+    <a href="#preview">Vergleich</a>
+    <a href="#faq">Fragen</a>
     <a href="calculator.html" class="btn btn-primary">Rolle analysieren</a>
   </div>
 </header>
@@ -153,34 +150,9 @@
 <!-- ① HERO -->
 <section class="hero" id="hero">
 
-  <!-- Infinite grid background -->
-  <div class="hero-grid-bg" id="heroGridBg">
-    <div class="hero-grid-blobs">
-      <div class="hero-blob hero-blob-1"></div>
-      <div class="hero-blob hero-blob-2"></div>
-      <div class="hero-blob hero-blob-3"></div>
-    </div>
-    <svg class="hero-grid-canvas" id="heroGridBase" aria-hidden="true">
-      <defs>
-        <pattern id="heroGridPatternBase" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="1"/>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#heroGridPatternBase)"/>
-    </svg>
-    <svg class="hero-grid-reveal" id="heroGridReveal" aria-hidden="true">
-      <defs>
-        <pattern id="heroGridPatternReveal" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="1"/>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#heroGridPatternReveal)"/>
-    </svg>
-  </div>
-
   <div class="container hero-layout">
     <div class="hero-text reveal">
-      <p class="eyebrow">KI-Rollenanalyse für Führungskräfte und HR-Teams</p>
+      <p class="eyebrow">KI-Rollenanalyse</p>
       <h1>Wie KI Ihr Team<br/><em>nachhaltig stärkt.</em></h1>
       <p class="hero-sub">5-Min-Rollenanalyse: Stellen gezielt rund um KI neu strukturieren.</p>
       <div class="hero-ctas">
@@ -249,12 +221,12 @@
       <div class="why-card reveal">
         <div class="why-num">01</div>
         <h3>Die meisten KI-Implementierungen enttäuschen</h3>
-        <p><a href="https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai" target="_blank" rel="noopener noreferrer">McKinsey (2024)</a> zeigt: 8 von 10 Unternehmen, die KI einsetzen, erzielen weniger Wert als erwartet — nicht weil die Technologie versagt, sondern weil die Arbeit drumherum nie neu strukturiert wurde.</p>
+        <p><a href="https://www.mckinsey.de/capabilities/quantumblack/our-insights/the-state-of-ai-2024" target="_blank" rel="noopener" class="cite-link">McKinsey (2024)</a> zeigt: 8 von 10 Unternehmen, die KI einsetzen, erzielen weniger Wert als erwartet — nicht weil die Technologie versagt, sondern weil die Arbeit drumherum nie neu strukturiert wurde.</p>
       </div>
       <div class="why-card reveal reveal-delay-1">
         <div class="why-num">02</div>
         <h3>Mensch-KI-Kollaboration schlägt beide allein</h3>
-        <p>Forschungen von <a href="https://www.nber.org/papers/w31161" target="_blank" rel="noopener noreferrer">MIT und Harvard</a> zeigen konsistent: Gemischte Mensch-KI-Teams übertreffen sowohl vollautomatisierte als auch rein menschliche Teams bei komplexen Wissensaufgaben um 20–40 %. Die gezielte Aufgabenteilung ist der entscheidende Vorteil.</p>
+        <p>Forschungen von <a href="https://www.nber.org/papers/w31161" target="_blank" rel="noopener" class="cite-link">MIT und Harvard</a> zeigen konsistent: Gemischte Mensch-KI-Teams übertreffen sowohl vollautomatisierte als auch rein menschliche Teams bei komplexen Wissensaufgaben um 20–40 %. Die gezielte Aufgabenteilung ist der entscheidende Vorteil.</p>
       </div>
       <div class="why-card reveal reveal-delay-2">
         <div class="why-num">03</div>
@@ -286,7 +258,7 @@
           <div class="hs-num">02</div>
           <div class="hs-text">
             <h3>Die Aufgabenstruktur bewerten</h3>
-            <p>Beantworten Sie Fragen zur Repetitivität, Standardisierung und Urteilsabhängigkeit der Arbeit. Dauert unter 2 Minuten.</p>
+            <p>Beantworten Sie Fragen zur Repetitivität, Standardisierung und Urteilsabhängigkeit der Arbeit.</p>
           </div>
         </div>
         <div class="how-step" data-step="3">
@@ -552,7 +524,90 @@
   </div>
 </section>
 
-<!-- ⑤ ABSCHLUSS-CTA -->
+<!-- ⑤ FAQ -->
+<section class="section-faq" id="faq">
+  <div class="container">
+    <div class="section-intro reveal">
+      <p class="eyebrow">Häufige Fragen</p>
+      <h2>Was Teams über<br/>KI-Rollenanalyse fragen.</h2>
+    </div>
+    <div class="faq-root">
+
+      <div class="faq-item" data-state="closed">
+        <button class="faq-trigger" aria-expanded="false">
+          <div class="faq-trigger-inner">
+            <span class="faq-num">01</span>
+            <span class="faq-title">Wie verändert KI den Arbeitsalltag?</span>
+          </div>
+        </button>
+        <div class="faq-content-outer">
+          <div class="faq-content-inner">
+            <p>KI übernimmt repetitive Routineaufgaben und gibt Mitarbeitenden mehr Raum für Urteilsvermögen, Koordination und kreative Problemlösung — der Arbeitsalltag wird menschlicher, nicht maschineller.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-state="closed">
+        <button class="faq-trigger" aria-expanded="false">
+          <div class="faq-trigger-inner">
+            <span class="faq-num">02</span>
+            <span class="faq-title">Warum scheitern KI-Implementierungen so oft?</span>
+          </div>
+        </button>
+        <div class="faq-content-outer">
+          <div class="faq-content-inner">
+            <p>Weil Technologie eingeführt wird, ohne die Arbeitsverteilung zwischen Mensch und KI auf Aufgabenebene zu klären — das Ergebnis sind neue Tools, aber unveränderter Arbeitsfluss.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-state="closed">
+        <button class="faq-trigger" aria-expanded="false">
+          <div class="faq-trigger-inner">
+            <span class="faq-num">03</span>
+            <span class="faq-title">Wie führe ich eine KI-Rollenanalyse durch?</span>
+          </div>
+        </button>
+        <div class="faq-content-outer">
+          <div class="faq-content-inner">
+            <p>Mit RoleShift: Stellenbezeichnung und Aufgaben eingeben, Arbeitsstruktur bewerten und einen aufgabenspezifischen KI-Kollaborationsplan erhalten — kostenlos, ohne Anmeldung.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-state="closed">
+        <button class="faq-trigger" aria-expanded="false">
+          <div class="faq-trigger-inner">
+            <span class="faq-num">04</span>
+            <span class="faq-title">Ist RoleShift DSGVO-konform?</span>
+          </div>
+        </button>
+        <div class="faq-content-outer">
+          <div class="faq-content-inner">
+            <p>Ja — RoleShift speichert keine personenbezogenen Daten, benötigt keine Registrierung und verarbeitet alle Eingaben anonym ohne Datenweitergabe an Dritte.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" data-state="closed">
+        <button class="faq-trigger" aria-expanded="false">
+          <div class="faq-trigger-inner">
+            <span class="faq-num">05</span>
+            <span class="faq-title">Für welche Branchen ist RoleShift geeignet?</span>
+          </div>
+        </button>
+        <div class="faq-content-outer">
+          <div class="faq-content-inner">
+            <p>RoleShift eignet sich für alle wissensintensiven Branchen — von Finanzdienstleistungen, HR und Consulting bis hin zu Industrie, Gesundheitswesen und öffentlicher Verwaltung.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ⑥ ABSCHLUSS-CTA -->
 <section class="section-cta">
   <div class="container">
     <div class="cta-block reveal">

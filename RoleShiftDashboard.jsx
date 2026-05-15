@@ -17,13 +17,13 @@ import './RoleShiftDashboard.css';
 
 /* ── Konstanten ─────────────────────────────────── */
 
-const TEAL      = '#0D9488';
-const TEAL_MID  = '#2DD4BF';
-const TEAL_SOFT = '#5EEAD4';
+const TEAL      = '#FC563C';
+const TEAL_MID  = '#FC563C';
+const TEAL_SOFT = '#FC563C';
 
 const DIST_COLORS = {
-  automatisierbar: '#0D9488',
-  kiUnterstuetzt:  '#5EEAD4',
+  automatisierbar: '#FC563C',
+  kiUnterstuetzt:  '#FC563C',
   pruefung:        '#F59E0B',
   menschlich:      '#94A3B8',
 };
@@ -49,7 +49,7 @@ const PRIO_CFG = {
 
 const TOOLTIP_STYLE = {
   background: 'rgba(7,13,22,.97)',
-  border: '1px solid rgba(13,148,136,.3)',
+  border: '1px solid rgba(252,86,60,.3)',
   borderRadius: 10,
   fontSize: 12,
   fontFamily: 'Inter, sans-serif',
@@ -79,7 +79,7 @@ function ScoreRing({ score }) {
 
       {/* Track */}
       <circle cx="88" cy="88" r={r}
-        fill="none" stroke="rgba(13,148,136,.12)" strokeWidth="7" />
+        fill="none" stroke="rgba(252,86,60,.12)" strokeWidth="7" />
 
       {/* Progress */}
       <circle cx="88" cy="88" r={r}
