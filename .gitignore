@@ -9,6 +9,10 @@ _skill_extracted/
 *.skill
 *.zip
 
+# Lokale Dev-Tools
+dev-server.js
+serve.ps1
+
 # OS
 .DS_Store
 Thumbs.db
