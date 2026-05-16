@@ -1365,7 +1365,7 @@ em {
 /* Flow-Nodes im Hero-Panel */
 [data-theme="light"] .hero .hv-node        { color: rgba(255,255,255,.35); background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.08); }
 [data-theme="light"] .hero .hv-node-done   { color: #ffffff; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); }
-[data-theme="light"] .hero .hv-node-active { color: #0a0a0a; background: #FC563C; border-color: #FC563C; }
+[data-theme="light"] .hero .hv-node-active { color: #ffffff; background: #FC563C; border-color: #FC563C; }
 [data-theme="light"] .hero .hv-line        { background: rgba(255,255,255,.12); }
 
 /* CTA-Sektion: dunkler Hintergrund mit Coral-Blobs wie roleshift2 */
