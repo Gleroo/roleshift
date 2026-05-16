@@ -119,6 +119,98 @@ howWrap?.addEventListener('mouseleave', () => {
   startHowTimer();
 });
 
+// --- HERO INTERACTIVE PARTICLES ----------
+(function () {
+  const canvas = document.getElementById('heroParticleCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const COUNT         = 55;
+  const REPEL_RADIUS  = 140;
+  const REPEL_FORCE   = 5.5;
+  let time = 0;
+  const mouse = { x: -9999, y: -9999 };
+  const particles = [];
+
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth  || window.innerWidth;
+    canvas.height = canvas.offsetHeight || window.innerHeight;
+  }
+
+  function spawn() {
+    for (let i = 0; i < COUNT; i++) {
+      particles.push({
+        x:     Math.random() * (canvas.width  || window.innerWidth),
+        y:     Math.random() * (canvas.height || window.innerHeight),
+        vx:    (Math.random() - 0.5) * 0.22,
+        vy:    (Math.random() - 0.5) * 0.22,
+        r:     Math.random() * 2.2 + 1.0,
+        alpha: Math.random() * 0.22 + 0.07,
+        phase: Math.random() * Math.PI * 2,
+        freq:  Math.random() * 0.5 + 0.2,
+      });
+    }
+  }
+
+  function stepParticle(p) {
+    if (!prefersReduced) {
+      p.x += p.vx + Math.sin(time * 0.001 * p.freq + p.phase) * 0.16;
+      p.y += p.vy + Math.cos(time * 0.0009 * p.freq + p.phase) * 0.13;
+    }
+
+    // Repulsion from mouse
+    const dx = p.x - mouse.x;
+    const dy = p.y - mouse.y;
+    const d  = Math.sqrt(dx * dx + dy * dy);
+    if (d < REPEL_RADIUS && d > 0.1) {
+      const strength = (1 - d / REPEL_RADIUS) * REPEL_FORCE;
+      p.x += (dx / d) * strength;
+      p.y += (dy / d) * strength;
+    }
+
+    // Wrap edges
+    const w = canvas.width, h = canvas.height;
+    if (p.x < -10) p.x = w + 10;
+    else if (p.x > w + 10) p.x = -10;
+    if (p.y < -10) p.y = h + 10;
+    else if (p.y > h + 10) p.y = -10;
+  }
+
+  function drawParticle(p) {
+    const glow = p.r * 7;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glow);
+    g.addColorStop(0,   `rgba(252,86,60,${p.alpha})`);
+    g.addColorStop(0.4, `rgba(252,86,60,${p.alpha * 0.4})`);
+    g.addColorStop(1,   `rgba(252,86,60,0)`);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, glow, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+  }
+
+  function animate() {
+    time++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { stepParticle(p); drawParticle(p); });
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+  });
+  window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+
+  resize();
+  spawn();
+  requestAnimationFrame(animate);
+}());
+
 // --- FAQ ACCORDION (single mode) ---------
 const faqItems = document.querySelectorAll('.faq-item');
 document.querySelectorAll('.faq-trigger').forEach(trigger => {
@@ -138,5 +230,4 @@ document.querySelectorAll('.faq-trigger').forEach(trigger => {
     }
   });
 });
-
 
